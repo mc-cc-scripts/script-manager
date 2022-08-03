@@ -1,3 +1,5 @@
+---Note: scm is not a real class, it should only exist once.
+---@class scm
 local scm = {}
 
 -- Configuration 
@@ -19,11 +21,13 @@ scm.config = {
 }
 ----------------
 
+
 scm.scripts = {}
 scm.commands = {
     ["add"] = {
+        ---@param args table
         func = function (args)
-            self:download(args[2], "library")
+            scm:download(args[2], "library")
         end,
         description = [[
 Adds a library with all its dependencies.
@@ -34,8 +38,9 @@ add <URL>
         ]]
     },
     ["get"] = {
+        ---@param args table
         func = function (args)
-            self:download(args[2], "program")
+            scm:download(args[2], "program")
         end,
         description = [[
 Adds a program with all its dependencies.
@@ -47,11 +52,12 @@ get <URL>
     },
     ["update"] = {}, -- maybe add parameter for extra source
     ["remove"] = {
+        ---@param args table
         func = function (args)
             if args[2] == "all" then
-                self:removeAllScripts()
+                scm:removeAllScripts()
             else 
-                self:removeScripts(args[2])
+                scm:removeScripts(args[2])
             end
         end,
         description = [[
@@ -60,16 +66,18 @@ remove all              Removes all scripts
         ]]
     },
     ["list"] = {
+        ---@param _ table
         func = function (_)
-            self:listScripts()
+            scm:listScripts()
         end,
         description = [[
 list                    Lists all installed scripts
         ]]
     },
     ["config"] = {
+        ---@param args table
         func = function (args)
-            self:updateConfig(args[2], args[3])
+            scm:updateConfig(args[2], args[3])
         end,
         description = [[
 config                  Lists all available configurations
@@ -77,11 +85,12 @@ config <name> <value>   Updates the configuration
         ]]
     },
     ["help"] = {
+        ---@param args table
         func = function (args)
             if args[2] then
-                print (args[2], self.commands[args[2]]["description"])
+                print (args[2], scm.commands[args[2]]["description"])
             end
-            for k, v in pairs(self.commands) do
+            for k, v in pairs(scm.commands) do
                 print(k, v.description)
             end
         end,
@@ -92,6 +101,9 @@ help <name>             Shows the description of the given command
     }
 }
 
+---@param str string
+---@return string | nil
+---@return string | nil
 function scm:splitNameCode (str)
     local separator = string.find(str, "@")
     
@@ -104,6 +116,9 @@ function scm:splitNameCode (str)
     return nil, nil
 end
 
+---@param target string
+---@param fileType string
+---@return boolean
 function scm:download (target, fileType)
     if target == nil then 
         --@TODO: Error handling
@@ -143,6 +158,11 @@ function scm:download (target, fileType)
     return scm:addScript(self:downloadGit(sourceObject, repository, self.config[fileType .. "Directory"]))
 end
 
+---@param sourceObject table
+---@param repository string
+---@param targetDirectory string
+---@return table | nil
+---@return boolean
 function scm:downloadGit (sourceObject, repository, targetDirectory)
     local url = self.config["rawURL"] .. 
                 self.config["user"] .. "/" .. 
@@ -155,6 +175,11 @@ function scm:downloadGit (sourceObject, repository, targetDirectory)
     return self:downloadURL(sourceObject, targetDirectory)
 end
 
+---@param sourceObject table
+---@param code string
+---@param targetDirectory string
+---@return table | nil
+---@return boolean
 function scm:downloadPastebin (sourceObject, code, targetDirectory)
     -- Only download if it does not already exist
     if not fs.exists(targetDirectory .. sourceObject.name) then
@@ -167,6 +192,10 @@ function scm:downloadPastebin (sourceObject, code, targetDirectory)
     return nil, false
 end
 
+---@param sourceObject table
+---@param targetDirectory string
+---@return table | nil
+---@return boolean
 function scm:downloadURL (sourceObject, targetDirectory)
     if not sourceObject.name then
         sourceObject.name = self:getNameFromURL(sourceObject.source)
@@ -189,9 +218,11 @@ function scm:downloadURL (sourceObject, targetDirectory)
     return nil, false
 end
 
+---@param url string
+---@return string
 function scm:getNameFromURL (url)
     local name = url:match("[^/]+$")
-    
+
     -- Remove file extension if name contains a dot
     if name:find("%.") then
         name = name:match("(.+)%..+$")
@@ -200,11 +231,16 @@ function scm:getNameFromURL (url)
     return name
 end
 
+---@param sourceObject table
+---@param success boolean
+---@return boolean
 function scm:addScript (sourceObject, success)
     if not success or not sourceObject then return false end
 
     table.insert(self.scripts, sourceObject)
     self:saveScripts()
+
+    return true
 end
 
 function scm:saveScripts ()
@@ -232,6 +268,7 @@ function scm:listScripts ()
     end
 end
 
+---@param name string
 function scm:removeScript (name)
     local o = {}
     local scriptType = nil
@@ -252,14 +289,16 @@ function scm:removeScript (name)
     end
 end
 
-function scm:removeAllScripts ()    
+function scm:removeAllScripts ()
     for i = 1, #self.scripts, 1 do
         self:removeScript(self.scripts[i].name)
     end
 end
 
--- source: https://stackoverflow.com/a/2705804/10495683
-function tablelength (T)
+---@source: https://stackoverflow.com/a/2705804/10495683
+---@param T table
+---@return integer
+local function tablelength (T)
     local count = 0
     for _ in pairs(T) do count = count + 1 end
     return count
@@ -289,6 +328,8 @@ function scm:loadConfig ()
     end
 end
 
+---@param name string
+---@param value string
 function scm:updateConfig (name, value)
     local writeConfig = true
 
@@ -311,8 +352,8 @@ function scm:updateConfig (name, value)
         end
     else
         print ("You can currently configure the following variables:")
-        for name, value in pairs(self.config) do
-            print (name, tostring(value))
+        for cname, cvalue in pairs(self.config) do
+            print (cname, tostring(cvalue))
         end
     end
 end
@@ -330,8 +371,9 @@ function scm:init ()
     self:loadScripts()
 end
 
+---@param args table
 function scm:handleArguments (args)
-    self:commands[args[1]]["func"](args)
+    self.commands[args[1]]["func"](args)
 end
 
 scm:init()
