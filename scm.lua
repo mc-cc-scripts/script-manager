@@ -28,7 +28,7 @@ scm.commands = {
     ["add"] = {
         ---@param args table
         func = function (args)
-            scm:download(args[2], "library")
+            scm:download(args[2], "library", nil)
         end,
         description = [[
 Adds a library with all its dependencies.
@@ -41,7 +41,7 @@ add <URL>
     ["get"] = {
         ---@param args table
         func = function (args)
-            scm:download(args[2], "program")
+            scm:download(args[2], "program", nil)
         end,
         description = [[
 Adds a program with all its dependencies.
@@ -138,7 +138,7 @@ end
 
 ---@param target string
 ---@param fileType string
----@param updateObj table
+---@param updateObj table | nil
 ---@return boolean
 function scm:download (target, fileType, updateObj)
     if target == nil then 
@@ -184,10 +184,18 @@ end
 ---@param sourceObject table
 ---@param repository string
 ---@param targetDirectory string
----@param updateObj table
+---@param updateObj table | nil
 ---@return table | nil
 ---@return boolean
 function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
+    ---@TODO: download files.txt from git repo
+    -- files.txt should contain relative (to the repo) paths to other files
+    -- the whole structure (including directories) should be downloaded
+    -- and put into a directory named sourceObject.name .. "Files"
+    -- then a file called sourceObject.name should be created in root
+    -- this file should start the main file within the directory
+    -- and pass all parameters to it
+    -- on update all downloaded files should be updated
     local url = self.config["rawURL"] .. 
                 self.config["user"] .. "/" .. 
                 repository .. "/" .. 
@@ -202,7 +210,7 @@ end
 ---@param sourceObject table
 ---@param code string
 ---@param targetDirectory string
----@param updateObj table
+---@param updateObj table | nil
 ---@return table | nil
 ---@return boolean
 function scm:downloadPastebin (sourceObject, code, targetDirectory, updateObj)
@@ -223,7 +231,7 @@ end
 
 ---@param sourceObject table
 ---@param targetDirectory string
----@param updateObj table
+---@param updateObj table | nil
 ---@return table | nil
 ---@return boolean
 function scm:downloadURL (sourceObject, targetDirectory, updateObj)
@@ -254,6 +262,7 @@ end
 ---@param url string
 ---@return string
 function scm:getNameFromURL (url)
+    -- Gets the filename + extension from a url (everything after last /)
     local name = url:match("[^/]+$")
 
     -- Remove file extension if name contains a dot
