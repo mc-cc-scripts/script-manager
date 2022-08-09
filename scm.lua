@@ -12,6 +12,7 @@ scm.config = {
     ["programSuffix"] = "-prog",
     ["librarySuffix"] = "-lib",
     -- Local Settings
+    ["installScript"] = "1kKZ8zTS",
     ["rootDirectory"] = "",
     ["programDirectory"] = "",
     ["libraryDirectory"] = "libs/",
@@ -50,14 +51,33 @@ get <name>@<pastebinCode>
 get <URL>
         ]]
     },
-    ["update"] = {}, -- maybe add parameter for extra source
+    ["update"] = {
+        ---@param args table
+        func = function (args)
+            if args[2] == "all" then
+                scm:updateAllScripts()
+            elseif args[3] then
+                scm:updateScript(args[2], args[3])
+            elseif args[2] then
+                scm:updateScript(args[2], nil)
+            else
+                scm:updateSCM()
+            end
+        end,
+        description = [[
+update                  Updates this program (SCM)
+update <name>           Updates the script with the given name
+update all              Updates all installed programs and libraries
+update <name> <srcName> Updates the script with an specific source
+        ]]
+    },
     ["remove"] = {
         ---@param args table
         func = function (args)
             if args[2] == "all" then
                 scm:removeAllScripts()
             else 
-                scm:removeScripts(args[2])
+                scm:removeScript(args[2])
             end
         end,
         description = [[
@@ -118,8 +138,9 @@ end
 
 ---@param target string
 ---@param fileType string
+---@param updateObj table
 ---@return boolean
-function scm:download (target, fileType)
+function scm:download (target, fileType, updateObj)
     if target == nil then 
         --@TODO: Error handling
         return false
@@ -127,7 +148,9 @@ function scm:download (target, fileType)
 
     local sourceObject = {
         name = nil,
-        source = target,
+        source = {
+            ["default"] = target
+        },
         type = fileType
     }
 
@@ -135,13 +158,13 @@ function scm:download (target, fileType)
     local name, code = self:splitNameCode(target)
     if name and code then
         sourceObject.name = name
-        return scm:addScript(self:downloadPastebin(sourceObject, code, self.config[fileType .. "Directory"]))
+        return scm:addScript(self:downloadPastebin(sourceObject, code, self.config[fileType .. "Directory"], updateObj))
     end
 
     -- Check for URL
     local isURL = string.lower(string.sub(target, 0, 4)) == "http"
     if isURL then
-        return scm:addScript(self:downloadURL(sourceObject, self.config[fileType .. "Directory"]))
+        return scm:addScript(self:downloadURL(sourceObject, self.config[fileType .. "Directory"], updateObj))
     end
 
     -- We assume it's Git
@@ -155,53 +178,63 @@ function scm:download (target, fileType)
     local repository = target .. suffix
     sourceObject.name = target
 
-    return scm:addScript(self:downloadGit(sourceObject, repository, self.config[fileType .. "Directory"]))
+    return scm:addScript(self:downloadGit(sourceObject, repository, self.config[fileType .. "Directory"], updateObj))
 end
 
 ---@param sourceObject table
 ---@param repository string
 ---@param targetDirectory string
+---@param updateObj table
 ---@return table | nil
 ---@return boolean
-function scm:downloadGit (sourceObject, repository, targetDirectory)
+function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
     local url = self.config["rawURL"] .. 
                 self.config["user"] .. "/" .. 
                 repository .. "/" .. 
                 self.config["branch"] .. "/" .. 
                 sourceObject.name .. ".lua"
 
-    sourceObject.source = url
+    sourceObject.source["default"] = url
 
-    return self:downloadURL(sourceObject, targetDirectory)
+    return self:downloadURL(sourceObject, targetDirectory, updateObj)
 end
 
 ---@param sourceObject table
 ---@param code string
 ---@param targetDirectory string
+---@param updateObj table
 ---@return table | nil
 ---@return boolean
-function scm:downloadPastebin (sourceObject, code, targetDirectory)
-    -- Only download if it does not already exist
-    if not fs.exists(targetDirectory .. sourceObject.name) then
-        shell.run("pastebin", "get", code, targetDirectory .. sourceObject.name)
-        return sourceObject, true
+function scm:downloadPastebin (sourceObject, code, targetDirectory, updateObj)
+    -- Only download if it does not already exist, or if it should be updated
+    if fs.exists(targetDirectory .. sourceObject.name) then
+        if updateObj then
+            fs.delete(targetDirectory .. sourceObject.name)
+            sourceObject = updateObj
+        else 
+            -- File already exists, you should use update
+            return nil, false
+        end
     end
 
-    -- File already exists, you should use update
-    --@TODO: Add error message
-    return nil, false
+    shell.run("pastebin", "get", code, targetDirectory .. sourceObject.name)
+    return sourceObject, true
 end
 
 ---@param sourceObject table
 ---@param targetDirectory string
+---@param updateObj table
 ---@return table | nil
 ---@return boolean
-function scm:downloadURL (sourceObject, targetDirectory)
+function scm:downloadURL (sourceObject, targetDirectory, updateObj)
+    local sourceName = "default" or updateObj.sourceName
+    sourceObject.name = sourceObject.name or updateObj.name
+
     if not sourceObject.name then
-        sourceObject.name = self:getNameFromURL(sourceObject.source)
+        sourceObject.name = self:getNameFromURL(sourceObject.source[sourceName])
     end
 
-    local request = http.get(sourceObject.source)
+    local request = http.get(sourceObject.source[sourceName])
 
     if request then
         local content = request.readAll()
@@ -231,11 +264,23 @@ function scm:getNameFromURL (url)
     return name
 end
 
----@param sourceObject table
+---@param sourceObject table | nil
 ---@param success boolean
 ---@return boolean
 function scm:addScript (sourceObject, success)
     if not success or not sourceObject then return false end
+
+    -- Check if script already exists, then update
+    for i = 1, #self.scripts, 1 do
+        if self.scripts[i].name == sourceObject.name and self.scripts[i].type == sourceObject.type then
+            if self.scripts[i].source[sourceObject.sourceName] then
+                self.scripts[i].source[sourceObject.sourceName] = sourceObject.source[sourceObject.sourceName]
+                self:saveScripts()
+                
+                return true
+            end
+        end
+    end
 
     table.insert(self.scripts, sourceObject)
     self:saveScripts()
@@ -261,10 +306,10 @@ function scm:loadScripts ()
 end
 
 function scm:listScripts ()
-    print ("name", "source", "type")
+    print ("name", "type")
     print ("----------------------")
     for i = 1, #self.scripts, 1 do
-        print (self.scripts[i].name, self.scripts[i].source, self.scripts[i].type)
+        print (self.scripts[i].name, self.scripts[i].type)
     end
 end
 
@@ -293,6 +338,40 @@ function scm:removeAllScripts ()
     for i = 1, #self.scripts, 1 do
         self:removeScript(self.scripts[i].name)
     end
+end
+
+---@param name string
+---@param sourceName string
+function scm:updateScript (name, sourceName)
+    if not sourceName then sourceName = "default" end
+
+    local updateObj = {
+        ["name"] = name,
+        ["type"] = nil,
+        ["sourceName"] = sourceName,
+        ["source"] = nil
+    }
+
+    for i = 1, #self.scripts, 1 do
+        if self.scripts[i].name == "name" then
+            updateObj.source = self.scripts[i].source[sourceName]
+            updateObj.type = self.scripts[i].type
+        end
+    end
+
+    if updateObj.source and updateObj.type then
+        self:download(updateObj.source, updateObj.type, updateObj)
+    end
+end
+
+function scm:updateAllScripts ()
+    for i = 1, #self.scripts, 1 do
+        self:updateScript(self.scripts[i].name, "default")
+    end
+end
+
+function scm:updateSCM ()
+    shell.run("pastebin", "run", self.config.installScript)
 end
 
 ---@source: https://stackoverflow.com/a/2705804/10495683
