@@ -191,23 +191,62 @@ end
 ---@return table | nil
 ---@return boolean
 function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
-    ---@TODO: download files.txt from git repo
-    -- files.txt should contain relative (to the repo) paths to other files
-    -- the whole structure (including directories) should be downloaded
-    -- and put into a directory named sourceObject.name .. "Files"
-    -- then a file called sourceObject.name should be created in root
-    -- this file should start the main file within the directory
-    -- and pass all parameters to it
-    -- on update all downloaded files should be updated
-    local url = self.config["rawURL"] .. 
-                self.config["user"] .. "/" .. 
-                repository .. "/" .. 
-                self.config["branch"] .. "/" .. 
-                sourceObject.name .. ".lua"
+    local baseUrl = self.config["rawURL"] .. 
+                    self.config["user"] .. "/" .. 
+                    repository .. "/" .. 
+                    self.config["branch"] .. "/"
 
-    sourceObject.source["default"] = url
+    local filesUrl = baseUrl .. self.config["infoFile"]
 
-    return self:downloadURL(sourceObject, targetDirectory, updateObj)
+    local request = http.get(filesUrl)
+    if request then
+        local content = request.readAll()
+        request.close()
+
+        if content then
+            local file = fs.open(self.config["programDirectory"] .. sourceObject.name .. "/" .. self.config["infoFile"], "w")
+            file.write(content)
+            file.close()
+
+            local filePaths = {}
+            file = fs.open(self.config["programDirectory"] .. sourceObject.name .. "/" .. self.config["infoFile"], "r")
+            for line in file.readLine do
+                filePaths[#filePaths + 1] = line
+            end
+            file.close()
+
+            for i = 1, #filePaths, 1 do
+                local success = true
+                local tmpRequest = http.get(baseUrl .. filePaths[i])
+                if tmpRequest then
+                    local tmpContent = tmpRequest.readAll()
+                    if tmpContent then
+                        local tmpFile = fs.open(self.config["programDirectory"] .. sourceObject.name .. "/" .. filePaths[i], "w")
+                        tmpFile.write(tmpContent)
+                        tmpFile.close()
+                    else
+                        success = false
+                    end
+                else
+                    success = false
+                end
+                tmpRequest.close()
+
+                if not success then
+                    return nil, false
+                end
+            end
+
+            -- create a link that calls the file within the program directory
+            local progamLink = fs.open(sourceObject.name, "w")
+            progamLink.write("shell.execute(\"" .. self.config["programDirectory"] .. sourceObject.name .. "/" .. sourceObject.name .. ".lua" .. "\", ...)")
+            progamLink.close()
+
+            return sourceObject, true
+        end
+    end
+
+    return nil, false
 end
 
 ---@param sourceObject table
@@ -343,6 +382,9 @@ function scm:removeScript (name)
 
     if scriptType and fs.exists(self.config[scriptType .. "Directory"] .. name) then
         fs.delete(self.config[scriptType .. "Directory"] .. name)
+        if scriptType == "program" then
+            fs.delete(name)
+        end
     end
 end
 
