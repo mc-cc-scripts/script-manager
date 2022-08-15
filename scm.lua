@@ -11,10 +11,11 @@ scm.config = {
     ["rawURL"] = "https://raw.githubusercontent.com/",
     ["programSuffix"] = "-prog",
     ["librarySuffix"] = "-lib",
+    ["infoFile"] = "files.txt", -- provides the structure of a git repo (paths to all files)
     -- Local Settings
     ["installScript"] = "1kKZ8zTS",
     ["rootDirectory"] = "",
-    ["programDirectory"] = "",
+    ["programDirectory"] = "progs/",
     ["libraryDirectory"] = "libs/",
     ["configDirectory"] = "config/",
     ["configFile"] = "scm-config.json",
@@ -153,6 +154,8 @@ function scm:download (target, fileType, updateObj)
         },
         type = fileType
     }
+
+    if updateObj then sourceObject.name = updateObj.name end
 
     -- Check for Pastebin
     local name, code = self:splitNameCode(target)
@@ -358,18 +361,18 @@ function scm:updateScript (name, sourceName)
         ["name"] = name,
         ["type"] = nil,
         ["sourceName"] = sourceName,
-        ["source"] = nil
+        ["source"] = {}
     }
 
     for i = 1, #self.scripts, 1 do
-        if self.scripts[i].name == "name" then
-            updateObj.source = self.scripts[i].source[sourceName]
+        if self.scripts[i].name == name then
+            updateObj.source[sourceName] = self.scripts[i].source[sourceName]
             updateObj.type = self.scripts[i].type
         end
     end
 
-    if updateObj.source and updateObj.type then
-        self:download(updateObj.source, updateObj.type, updateObj)
+    if updateObj.source[sourceName] and updateObj.type then
+        self:download(updateObj.source[sourceName], updateObj.type, updateObj)
     end
 end
 
@@ -461,7 +464,9 @@ end
 
 ---@param args table
 function scm:handleArguments (args)
-    self.commands[args[1]]["func"](args)
+    if args[1] then
+        self.commands[args[1]]["func"](args)
+    end
 end
 
 scm:init()
