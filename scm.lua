@@ -215,12 +215,12 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
         request.close()
 
         if content then
-            local file = fs.open(targetDirectory .. sourceObject.name .. "/" .. self.config["infoFile"], "w")
+            local file = fs.open(targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. self.config["infoFile"], "w")
             file.write(content)
             file.close()
 
             local filePaths = {}
-            file = fs.open(targetDirectory .. sourceObject.name .. "/" .. self.config["infoFile"], "r")
+            file = fs.open(targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. self.config["infoFile"], "r")
             for line in file.readLine do
                 filePaths[#filePaths + 1] = line
             end
@@ -251,7 +251,7 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
             -- create a link that calls the file within the program directory
             if sourceObject.type == "program" then
                 local progamLink = fs.open(sourceObject.name, "w")
-                progamLink.write("shell.execute(\"" .. targetDirectory .. sourceObject.name .. "/" .. sourceObject.name .. ".lua" .. "\", ...)")
+                progamLink.write("shell.execute(\"" .. targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. sourceObject.name .. ".lua" .. "\", ...)")
                 progamLink.close()
             elseif sourceObject.type == "library" then
                 local libraryLink = fs.open(targetDirectory .. sourceObject.name .. ".lua", "w")
@@ -261,7 +261,7 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
                     tmpName = tmpName:match("(.+)%..+$")
                 end
 
-                libraryLink.write("return require(\"" .. tmpName .. "/" .. tmpName .. "\")")
+                libraryLink.write("return require(\"" .. tmpName .. self.config[sourceObject.type .. "Suffix"] .. "/" .. tmpName .. "\")")
                 libraryLink.close()
             end
 
