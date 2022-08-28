@@ -215,12 +215,12 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
         request.close()
 
         if content then
-            local file = fs.open(self.config["programDirectory"] .. sourceObject.name .. "/" .. self.config["infoFile"], "w")
+            local file = fs.open(targetDirectory .. sourceObject.name .. "/" .. self.config["infoFile"], "w")
             file.write(content)
             file.close()
 
             local filePaths = {}
-            file = fs.open(self.config["programDirectory"] .. sourceObject.name .. "/" .. self.config["infoFile"], "r")
+            file = fs.open(targetDirectory .. sourceObject.name .. "/" .. self.config["infoFile"], "r")
             for line in file.readLine do
                 filePaths[#filePaths + 1] = line
             end
@@ -232,7 +232,7 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
                 if tmpRequest then
                     local tmpContent = tmpRequest.readAll()
                     if tmpContent then
-                        local tmpFile = fs.open(self.config["programDirectory"] .. sourceObject.name .. "/" .. filePaths[i], "w")
+                        local tmpFile = fs.open(targetDirectory .. sourceObject.name .. "/" .. filePaths[i], "w")
                         tmpFile.write(tmpContent)
                         tmpFile.close()
                     else
@@ -249,9 +249,11 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
             end
 
             -- create a link that calls the file within the program directory
-            local progamLink = fs.open(sourceObject.name, "w")
-            progamLink.write("shell.execute(\"" .. self.config["programDirectory"] .. sourceObject.name .. "/" .. sourceObject.name .. ".lua" .. "\", ...)")
-            progamLink.close()
+            if sourceObject.type == "program" then
+                local progamLink = fs.open(sourceObject.name, "w")
+                progamLink.write("shell.execute(\"" .. targetDirectory .. sourceObject.name .. "/" .. sourceObject.name .. ".lua" .. "\", ...)")
+                progamLink.close()
+            end
 
             return sourceObject, true
         end
