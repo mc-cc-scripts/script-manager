@@ -109,10 +109,10 @@ config <name> <value>   Updates the configuration
         ---@param args table
         func = function (args)
             if args[2] then
-                textutils.pagedPrint(args[2], scm.commands[args[2]]["description"])
+                textutils.pagedPrint(args[2] .. " " .. scm.commands[args[2]]["description"])
             end
             for k, v in pairs(scm.commands) do
-                textutils.pagedPrint(k, v.description)
+                textutils.pagedPrint(k .. " " .. v.description)
             end
         end,
         description = [[
