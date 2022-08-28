@@ -232,7 +232,7 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
                 if tmpRequest then
                     local tmpContent = tmpRequest.readAll()
                     if tmpContent then
-                        local tmpFile = fs.open(targetDirectory .. sourceObject.name .. "/" .. filePaths[i], "w")
+                        local tmpFile = fs.open(targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. filePaths[i], "w")
                         tmpFile.write(tmpContent)
                         tmpFile.close()
                     else
@@ -253,6 +253,16 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
                 local progamLink = fs.open(sourceObject.name, "w")
                 progamLink.write("shell.execute(\"" .. targetDirectory .. sourceObject.name .. "/" .. sourceObject.name .. ".lua" .. "\", ...)")
                 progamLink.close()
+            elseif sourceObject.type == "library" then
+                local libraryLink = fs.open(targetDirectory .. sourceObject.name, "w")
+                
+                local tmpName = sourceObject.name
+                if tmpName:find("%.") then
+                    tmpName = tmpName:match("(.+)%..+$")
+                end
+
+                libraryLink.write("return require(\"" .. tmpName .. "/" .. tmpName"\")")
+                libraryLink.close()
             end
 
             return sourceObject, true
@@ -397,6 +407,8 @@ function scm:removeScript (name)
         fs.delete(self.config[scriptType .. "Directory"] .. name)
         if scriptType == "program" then
             fs.delete(name)
+        elseif scriptType == "library" then
+            fs.delete(self.config[scriptType .. "Directory"] .. name .. self.config[scriptType .. "Suffix"])
         end
     end
 end
