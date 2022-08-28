@@ -261,7 +261,7 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
                     tmpName = tmpName:match("(.+)%..+$")
                 end
 
-                libraryLink.write("return require(\"" .. tmpName .. self.config[sourceObject.type .. "Suffix"] .. "/" .. tmpName .. "\")")
+                libraryLink.write("return require(\"./" .. self.config["libraryDirectory"] .. "/" .. tmpName .. self.config[sourceObject.type .. "Suffix"] .. "/" .. tmpName .. "\")")
                 libraryLink.close()
             end
 
