@@ -121,7 +121,7 @@ Updates the configuration
                 textutils.pagedPrint(args[2] .. "\n" .. scm.commands[args[2]]["description"])
             end
             for k, v in pairs(scm.commands) do
-                textutils.pagedPrint(k .. "\n" .. v.description)
+                textutils.pagedPrint("# " .. k .. "\n" .. v.description)
             end
         end,
         description = [[
@@ -403,12 +403,12 @@ function scm:removeScript (name)
     self.scripts = o
     self:saveScripts()
 
-    if scriptType and fs.exists(self.config[scriptType .. "Directory"] .. name) then
-        fs.delete(self.config[scriptType .. "Directory"] .. name)
+    if scriptType and fs.exists(self.config[scriptType .. "Directory"] .. name .. self.config[scriptType .. "Suffix"]) then
+        fs.delete(self.config[scriptType .. "Directory"] .. name .. self.config[scriptType .. "Suffix"])
         if scriptType == "program" then
             fs.delete(name)
         elseif scriptType == "library" then
-            fs.delete(self.config[scriptType .. "Directory"] .. name .. self.config[scriptType .. "Suffix"])
+            fs.delete(self.config[scriptType .. "Directory"] .. name .. ".lua")
         end
     end
 end
