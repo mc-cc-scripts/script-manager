@@ -34,9 +34,9 @@ scm.commands = {
         description = [[
 Adds a library with all its dependencies.
 If only a name is given, it will try to download from the official GitHub repositories.
-add <name>
-add <name>@<pastebinCode>
-add <URL>
+$ add <name>
+$ add <name>@<pastebinCode>
+$ add <URL>
         ]]
     },
     ["get"] = {
@@ -47,9 +47,9 @@ add <URL>
         description = [[
 Adds a program with all its dependencies.
 If only a name is given, it will try to download from the official GitHub repositories.
-get <name>
-get <name>@<pastebinCode>
-get <URL>
+$ get <name>
+$ get <name>@<pastebinCode>
+$ get <URL>
         ]]
     },
     ["update"] = {
@@ -66,10 +66,14 @@ get <URL>
             end
         end,
         description = [[
-update                  Updates this program (SCM)
-update <name>           Updates the script with the given name
-update all              Updates all installed programs and libraries
-update <name> <srcName> Updates the script with an specific source
+$ update
+Updates this program (SCM)
+$ update <name>
+Updates the script with the given name
+$ update all
+Updates all installed programs and libraries
+$ update <name> <srcName>
+Updates the script with an specific source
         ]]
     },
     ["remove"] = {
@@ -82,8 +86,10 @@ update <name> <srcName> Updates the script with an specific source
             end
         end,
         description = [[
-remove <name>           Removes the given script
-remove all              Removes all scripts
+$ remove <name>
+Removes the given script
+$ remove all
+Removes all scripts
         ]]
     },
     ["list"] = {
@@ -92,7 +98,8 @@ remove all              Removes all scripts
             scm:listScripts()
         end,
         description = [[
-list                    Lists all installed scripts
+$ list
+Lists all installed scripts
         ]]
     },
     ["config"] = {
@@ -101,23 +108,27 @@ list                    Lists all installed scripts
             scm:updateConfig(args[2], args[3])
         end,
         description = [[
-config                  Lists all available configurations
-config <name> <value>   Updates the configuration
+$ config
+Lists all available configurations
+$ config <name> <value>
+Updates the configuration
         ]]
     },
     ["help"] = {
         ---@param args table
         func = function (args)
             if args[2] then
-                textutils.pagedPrint(args[2] .. " " .. scm.commands[args[2]]["description"])
+                textutils.pagedPrint(args[2] .. "\n" .. scm.commands[args[2]]["description"])
             end
             for k, v in pairs(scm.commands) do
-                textutils.pagedPrint(k .. " " .. v.description)
+                textutils.pagedPrint(k .. "\n" .. v.description)
             end
         end,
         description = [[
-help                    Shows all available commands and their description
-help <name>             Shows the description of the given command
+$ help
+Shows all available commands and their description
+$ help <name>
+Shows the description of the given command
         ]]
     }
 }
