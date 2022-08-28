@@ -254,7 +254,7 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
                 progamLink.write("shell.execute(\"" .. targetDirectory .. sourceObject.name .. "/" .. sourceObject.name .. ".lua" .. "\", ...)")
                 progamLink.close()
             elseif sourceObject.type == "library" then
-                local libraryLink = fs.open(targetDirectory .. sourceObject.name, "w")
+                local libraryLink = fs.open(targetDirectory .. sourceObject.name .. ".lua", "w")
                 
                 local tmpName = sourceObject.name
                 if tmpName:find("%.") then
