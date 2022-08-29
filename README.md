@@ -25,17 +25,17 @@ Download SCM with the following command:
 ## update
 By default, without parameters, `update` updates the SCM script.
 - `<name>`: Removes and downloads an installed script by name.
-- `<all>`: Removes and downloads all installed scripts.
+- `all`: Removes and downloads all installed scripts.
 - `<name> <sourceName>`: Removes and downloads an installed script from a specific source. Sources can be added via the `source` command.
 ## source
-- `<add> <scriptName> <sourceName> <source>`: Adds a source (URL, Pastebin Code, ...) with a name to a script.
-- `<get> <scriptName>`: Shows all sources of a script.
-- `<remove> <scriptName> <sourceName>`: Removes a source from a script.
-- `<default> <scriptName> <sourceName>`: Sets a specific source to the default of a script. The previous default script gets a generated name.
-- `<rename> <scriptName> <sourceName> <newSourceName>`: Updates the name of a source.
+- `add <scriptName> <sourceName> <source>`: Adds a source (URL, Pastebin Code, ...) with a name to a script.
+- `get <scriptName>`: Shows all sources of a script.
+- `remove <scriptName> <sourceName>`: Removes a source from a script.
+- `default <scriptName> <sourceName>`: Sets a specific source to the default of a script. The previous default script gets a generated name.
+- `rename <scriptName> <sourceName> <newSourceName>`: Updates the name of a source.
 ## remove
 - `<name>`: Deletes a script by name.
-- `<all>`: Deletes all scripts.
+- `all`: Deletes all scripts.
 ## list
 Shows all installed scripts.
 ## config
