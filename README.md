@@ -38,6 +38,7 @@ By default, without parameters, `update` updates the SCM script.
 Shows all installed scripts.
 ## config
 Shows all available configurations.
+- `<name>`: Shows the value of a specific configuration.
 - `<name> <value>`: Updates the value of a specific configuration.
 ## help
 Shows all available commands and their description.

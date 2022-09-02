@@ -65,13 +65,13 @@ $ add <name>@<pastebinCode>
         end,
         description = [[
 $ update
-Updates this program (SCM)
+  Updates this program (SCM)
 $ update <name>
-Updates the script with the given name
+  Updates the script with the given name
 $ update all
-Updates all installed programs and libraries
+  Updates all installed programs and libraries
 $ update <name> <srcName>
-Updates the script with an specific source
+  Updates the script with an specific source
         ]]
     },
     ["remove"] = {
@@ -85,9 +85,9 @@ Updates the script with an specific source
         end,
         description = [[
 $ remove <name>
-Removes the given script
+  Removes the given script
 $ remove all
-Removes all scripts
+  Removes all scripts
         ]]
     },
     ["list"] = {
@@ -97,36 +97,52 @@ Removes all scripts
         end,
         description = [[
 $ list
-Lists all installed scripts
+  Lists all installed scripts
         ]]
     },
     ["config"] = {
         ---@param args table
         func = function (args)
-            scm:updateConfig(args[2], args[3])
+            if args[3] then
+                scm:updateConfig(args[2], args[3])
+            elseif args[2] then
+                if scm.config[args[2]] then
+                    print (args[2], tostring(scm.config[args[2]]))
+                end
+            else
+                print ("You can currently configure the following variables:")
+                for cname, cvalue in pairs(scm.config) do
+                    print (cname, tostring(cvalue))
+                end
+            end
         end,
         description = [[
 $ config
-Lists all available configurations
+  Lists all available configurations
+$ config <name>
+  Shows a specific configuration
 $ config <name> <value>
-Updates the configuration
+  Updates the configuration
         ]]
     },
     ["help"] = {
         ---@param args table
         func = function (args)
             if args[2] then
-                textutils.pagedPrint(args[2] .. "\n" .. scm.commands[args[2]]["description"])
-            end
-            for k, v in pairs(scm.commands) do
-                textutils.pagedPrint("# " .. k .. "\n" .. v.description)
+                if scm.commands[args[2]] then
+                    textutils.pagedPrint(args[2] .. "\n" .. scm.commands[args[2]]["description"])
+                end
+            else
+                for k, v in pairs(scm.commands) do
+                    textutils.pagedPrint("# " .. k .. "\n" .. v.description)
+                end
             end
         end,
         description = [[
 $ help
-Shows all available commands and their description
+  Shows all available commands and their description
 $ help <name>
-Shows the description of the given command
+  Shows the description of the given command
         ]]
     }
 }
@@ -282,6 +298,10 @@ function scm:downloadPastebin (sourceObject, code, targetDirectory, updateObj)
         end
     end
 
+    if updateObj then
+        fs.delete(sourceObject.name)
+    end
+
     if sourceObject.type == "program" then
         shell.run("pastebin", "get", code, sourceObject.name)
     else
@@ -342,10 +362,12 @@ end
 ---@return boolean
 function scm:addScript (sourceObject, success)
     if not success or not sourceObject then return false end
+    local scriptExists = false
 
     -- Check if script already exists, then update
     for i = 1, #self.scripts, 1 do
         if self.scripts[i].name == sourceObject.name and self.scripts[i].type == sourceObject.type then
+            scriptExists = true
             if self.scripts[i].source[sourceObject.sourceName] then
                 self.scripts[i].source[sourceObject.sourceName] = sourceObject.source[sourceObject.sourceName]
                 self:saveScripts()
@@ -355,7 +377,10 @@ function scm:addScript (sourceObject, success)
         end
     end
 
-    table.insert(self.scripts, sourceObject)
+    if not scriptExists then
+        table.insert(self.scripts, sourceObject)
+    end
+
     self:saveScripts()
 
     return true
@@ -387,20 +412,22 @@ function scm:listScripts ()
 end
 
 ---@param name string
-function scm:removeScript (name)
+function scm:removeScript (name, keepScriptConfig)
     local o = {}
     local scriptType = nil
 
-    for i = 1, #self.scripts, 1 do
-        if self.scripts[i].name ~= name then
-            table.insert(o, self.scripts[i])
-        else 
-            scriptType = self.scripts[i].type
+    if keepScriptConfig ~= true then
+        for i = 1, #self.scripts, 1 do
+            if self.scripts[i].name ~= name then
+                table.insert(o, self.scripts[i])
+            else 
+                scriptType = self.scripts[i].type
+            end
         end
-    end
 
-    self.scripts = o
-    self:saveScripts()
+        self.scripts = o
+        self:saveScripts()
+    end
 
     if scriptType and fs.exists(self.config[scriptType .. "Directory"] .. name .. self.config[scriptType .. "Suffix"]) then
         fs.delete(self.config[scriptType .. "Directory"] .. name .. self.config[scriptType .. "Suffix"])
@@ -446,8 +473,8 @@ function scm:updateScript (name, sourceName)
     end
 
     if updateObj.source[sourceName] and updateObj.type then
-        self:removeScript(name)
-        self:download(updateObj.source[sourceName], updateObj.type)
+        self:removeScript(name, true)
+        self:download(updateObj.source[sourceName], updateObj.type, updateObj)
         return true
     end
 
