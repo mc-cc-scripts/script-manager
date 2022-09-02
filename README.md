@@ -17,11 +17,9 @@ Download SCM with the following command:
 ## add
 - `<name>`: Downloads a library from GitHub. Libraries always have the suffix `-lib` ([Naming Conventions](https://github.com/mc-cc-scripts/.github/blob/master/profile/README.md#naming-conventions)). The suffix should not be added to the name.
 - `<name>@<pastebin code>`: Downloads a library from Pastebin.
-- `<url>`: Downloads a library from an URL.
 ## get
 - `<name>`: Downloads a program from GitHub. Programs always have the suffix `-prog` ([Naming Conventions](https://github.com/mc-cc-scripts/.github/blob/master/profile/README.md#naming-conventions)). The suffix should not be added to the name.
 - `<name>@<pastebin code>`: Downloads a program from Pastebin.
-- `<url>`: Downloads a program from an URL.
 ## update
 By default, without parameters, `update` updates the SCM script.
 - `<name>`: Removes and downloads an installed script by name.

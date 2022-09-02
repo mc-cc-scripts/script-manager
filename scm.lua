@@ -36,7 +36,6 @@ Adds a library with all its dependencies.
 If only a name is given, it will try to download from the official GitHub repositories.
 $ add <name>
 $ add <name>@<pastebinCode>
-$ add <URL>
         ]]
     },
     ["get"] = {
@@ -49,7 +48,6 @@ Adds a program with all its dependencies.
 If only a name is given, it will try to download from the official GitHub repositories.
 $ get <name>
 $ get <name>@<pastebinCode>
-$ get <URL>
         ]]
     },
     ["update"] = {
@@ -175,12 +173,6 @@ function scm:download (target, fileType, updateObj)
         return scm:addScript(self:downloadPastebin(sourceObject, code, self.config[fileType .. "Directory"], updateObj))
     end
 
-    -- Check for URL
-    local isURL = string.lower(string.sub(target, 0, 4)) == "http"
-    if isURL then
-        return scm:addScript(self:downloadURL(sourceObject, self.config[fileType .. "Directory"], updateObj))
-    end
-
     -- We assume it's Git
     -- The suffix is used to find the correct repository on GitHub
     local suffix
@@ -290,7 +282,12 @@ function scm:downloadPastebin (sourceObject, code, targetDirectory, updateObj)
         end
     end
 
-    shell.run("pastebin", "get", code, targetDirectory .. sourceObject.name)
+    if sourceObject.type == "program" then
+        shell.run("pastebin", "get", code, sourceObject.name)
+    else
+        shell.run("pastebin", "get", code, targetDirectory .. sourceObject.name)
+    end
+
     return sourceObject, true
 end
 
@@ -301,7 +298,9 @@ end
 ---@return boolean
 function scm:downloadURL (sourceObject, targetDirectory, updateObj)
     local sourceName = "default" or updateObj.sourceName
-    sourceObject.name = sourceObject.name or updateObj.name
+    if updateObj then
+        sourceObject.name = sourceObject.name or updateObj.name
+    end
 
     if not sourceObject.name then
         sourceObject.name = self:getNameFromURL(sourceObject.source[sourceName])
