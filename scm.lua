@@ -26,7 +26,7 @@ scm.config = {
 
 scm.scripts = {}
 scm.commands = {
-    ["add"] = {
+    ["require"] = {
         ---@param args table
         func = function (args)
             scm:download(args[2], "library", nil)
@@ -34,11 +34,11 @@ scm.commands = {
         description = [[
 Adds a library with all its dependencies.
 If only a name is given, it will try to download from the official GitHub repositories.
-$ add <name>
-$ add <name>@<pastebinCode>
+$ require <name>
+$ require <name>@<pastebinCode>
         ]]
     },
-    ["get"] = {
+    ["add"] = {
         ---@param args table
         func = function (args)
             scm:download(args[2], "program", nil)
@@ -46,8 +46,8 @@ $ add <name>@<pastebinCode>
         description = [[
 Adds a program with all its dependencies.
 If only a name is given, it will try to download from the official GitHub repositories.
-$ get <name>
-$ get <name>@<pastebinCode>
+$ add <name>
+$ add <name>@<pastebinCode>
         ]]
     },
     ["update"] = {
@@ -404,22 +404,30 @@ function scm:removeScript (name)
 
     if scriptType and fs.exists(self.config[scriptType .. "Directory"] .. name .. self.config[scriptType .. "Suffix"]) then
         fs.delete(self.config[scriptType .. "Directory"] .. name .. self.config[scriptType .. "Suffix"])
-        if scriptType == "program" then
-            fs.delete(name)
-        elseif scriptType == "library" then
+        if scriptType == "library" then
             fs.delete(self.config[scriptType .. "Directory"] .. name .. ".lua")
         end
+    end
+
+    if scriptType == "program" then
+        fs.delete(name)
     end
 end
 
 function scm:removeAllScripts ()
+    local tmpScripts = {}
     for i = 1, #self.scripts, 1 do
-        self:removeScript(self.scripts[i].name)
+        table.insert(tmpScripts, self.scripts[i].name)
+    end
+
+    for i = 1, #tmpScripts, 1 do
+        self:removeScript(tmpScripts[i])
     end
 end
 
 ---@param name string
 ---@param sourceName string
+---@return boolean
 function scm:updateScript (name, sourceName)
     if not sourceName then sourceName = "default" end
 
@@ -438,8 +446,12 @@ function scm:updateScript (name, sourceName)
     end
 
     if updateObj.source[sourceName] and updateObj.type then
-        self:download(updateObj.source[sourceName], updateObj.type, updateObj)
+        self:removeScript(name)
+        self:download(updateObj.source[sourceName], updateObj.type)
+        return true
     end
+
+    return false
 end
 
 function scm:updateAllScripts ()
@@ -530,7 +542,7 @@ end
 
 ---@param args table
 function scm:handleArguments (args)
-    if args[1] then
+    if args[1] and self.commands[args[1]] then
         self.commands[args[1]]["func"](args)
     end
 end
