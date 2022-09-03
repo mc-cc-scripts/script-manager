@@ -303,9 +303,9 @@ function scm:downloadPastebin (sourceObject, code, targetDirectory, updateObj)
     end
 
     if sourceObject.type == "program" then
-        shell.run("pastebin", "get", code, sourceObject.name)
+        shell.run("pastebin", "get", code, sourceObject.name .. ".lua")
     else
-        shell.run("pastebin", "get", code, targetDirectory .. sourceObject.name)
+        shell.run("pastebin", "get", code, targetDirectory .. sourceObject.name .. ".lua")
     end
 
     return sourceObject, true
@@ -429,7 +429,7 @@ function scm:removeScript (name, keepScriptConfig)
         self:saveScripts()
     end
 
-    if scriptType and fs.exists(self.config[scriptType .. "Directory"] .. name .. self.config[scriptType .. "Suffix"]) then
+    if scriptType and fs.exists(self.config[scriptType .. "Directory"] .. name .. ".lua") then
         fs.delete(self.config[scriptType .. "Directory"] .. name .. self.config[scriptType .. "Suffix"])
         if scriptType == "library" then
             fs.delete(self.config[scriptType .. "Directory"] .. name .. ".lua")
@@ -552,6 +552,96 @@ function scm:updateConfig (name, value)
             print (cname, tostring(cvalue))
         end
     end
+end
+
+---@param name string
+function scm:checkRequirements(name)
+    print ("Checking requirements of " .. name .. "...")
+    local file
+    if fs.exists("./" .. self.config["libraryDirectory"] .. name .. self.config["librarySuffix"] .. "/" .. name .. ".lua") then
+        print("1","./" .. self.config["libraryDirectory"] .. name)
+        file = fs.open("./" .. self.config["libraryDirectory"] .. name .. self.config["librarySuffix"] .. "/" .. name .. ".lua", "r")
+    else
+        print("2", "./" .. self.config["libraryDirectory"] .. name)
+        file = fs.open("./" .. self.config["libraryDirectory"] .. name .. ".lua", "r")
+    end
+
+    -- Find requirements by searching for comment --@requires name
+    local requires = {}
+    while true do
+        local line = file.readLine()
+        if not line then break end
+
+        local find = string.find(line, "--@requires")
+        if find then
+            line = string.sub(line, find + 12)
+            local lineEnd = string.find(line, " ")
+
+            local scriptName = nil
+            if lineEnd then
+                scriptName = string.sub(line, 0, lineEnd - 1)
+            else
+                scriptName = string.sub(line, 0)
+            end
+
+            local scriptExists = false
+            for i = 1, #self.scripts, 1 do
+                if self.scripts[i].name == scriptName then
+                    scriptExists = true
+                end
+            end
+            if scriptExists then
+                -- requirement already satisfied!
+                print ("Requirement already satisfied! (" .. scriptName .. ")")
+            else
+                requires[#requires + 1] = scriptName
+            end
+        end
+    end
+    file.close()
+
+    -- Install missing requirements
+    for i = 1, #requires do
+        local n = requires[i]
+        print("Trying to install " .. n .. "...")
+        self:download(n, "library")
+        local tmpName, tmpCode = self:splitNameCode(n)
+        if tmpCode then n = tmpName end
+        self:checkRequirements(n)
+    end
+end
+
+---@param name string
+---@return any
+function scm:load(name)
+    local scriptExists = false
+    for i = 1, #self.scripts, 1 do
+        if self.scripts[i].name == name then
+            scriptExists = true
+        end
+    end
+
+    if not scriptExists then
+        self:download(name, "library")
+    end
+
+    scriptExists = false
+    for i = 1, #self.scripts, 1 do
+        if self.scripts[i].name == name then
+            scriptExists = true
+        end
+    end
+
+    if scriptExists then
+        self:checkRequirements(name)
+        local path = "./" .. self.config["libraryDirectory"] .. name
+        local script = require(path)
+        return script
+    else
+        -- error installing failed
+    end
+
+    return nil
 end
 
 function scm:init ()
