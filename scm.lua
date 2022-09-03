@@ -19,7 +19,12 @@ scm.config = {
     ["libraryDirectory"] = "libs/",
     ["configDirectory"] = "config/",
     ["configFile"] = "scm-config.json",
-    ["scriptFile"] = "scm-scripts.json" -- will be saved in configDirectory as well
+    ["scriptFile"] = "scm-scripts.json", -- will be saved in configDirectory as well
+    ["verbose"] = true,
+    ["printPrefix"] = "[scm] ",
+    ["logDate"] = false,
+    ["writeLogFile"] = false,
+    ["logFilePath"] = "logs/scm-log.txt"
 }
 ----------------
 
@@ -106,13 +111,13 @@ $ list
             if args[3] then
                 scm:updateConfig(args[2], args[3])
             elseif args[2] then
-                if scm.config[args[2]] then
-                    print (args[2], tostring(scm.config[args[2]]))
+                if scm.config[args[2]] ~= nil then
+                    print(args[2], tostring(scm.config[args[2]]))
                 end
             else
                 print ("You can currently configure the following variables:")
                 for cname, cvalue in pairs(scm.config) do
-                    print (cname, tostring(cvalue))
+                    textutils.pagedPrint(cname .. "\t" .. tostring(cvalue))
                 end
             end
         end,
@@ -147,6 +152,19 @@ $ help <name>
     }
 }
 
+---@param message string
+function scm:log (message)
+    local datetime = ""
+    if self.config["logDate"] then datetime = os.date("[%Y-%m-%d %H:%M:%S] ") end
+    if self.config["verbose"] then print (self.config["printPrefix"] .. message) end
+
+    if self.config["writeLogFile"] then
+        local file = fs.open(self.config["logFilePath"], "a")
+        file.write (datetime .. message .. "\n")
+        file.close()
+    end
+end
+
 ---@param str string
 ---@return string | nil
 ---@return string | nil
@@ -167,6 +185,7 @@ end
 ---@param updateObj table | nil
 ---@return boolean
 function scm:download (target, fileType, updateObj)
+    scm:log("Downloading " .. fileType .. " " .. target .. "...")
     if target == nil then 
         --@TODO: Error handling
         return false
@@ -362,6 +381,7 @@ end
 ---@return boolean
 function scm:addScript (sourceObject, success)
     if not success or not sourceObject then return false end
+    scm:log("Adding script " .. sourceObject.name .. "...")
     local scriptExists = false
 
     -- Check if script already exists, then update
@@ -378,7 +398,10 @@ function scm:addScript (sourceObject, success)
     end
 
     if not scriptExists then
+        scm:log("Script added: " .. sourceObject.name)
         table.insert(self.scripts, sourceObject)
+    else
+        scm:log("Script already exists.")
     end
 
     self:saveScripts()
@@ -413,6 +436,7 @@ end
 
 ---@param name string
 function scm:removeScript (name, keepScriptConfig)
+    scm:log("Removing script: " .. name)
     local o = {}
     local scriptType = nil
 
@@ -488,6 +512,7 @@ function scm:updateAllScripts ()
 end
 
 function scm:updateSCM ()
+    scm:log("Updating scm...")
     shell.run("pastebin", "run", self.config.installScript)
 end
 
@@ -547,22 +572,20 @@ function scm:updateConfig (name, value)
             self:saveConfig()
         end
     else
-        print ("You can currently configure the following variables:")
+        scm:log("You can currently configure the following variables:")
         for cname, cvalue in pairs(self.config) do
-            print (cname, tostring(cvalue))
+            scm:log(cname, tostring(cvalue))
         end
     end
 end
 
 ---@param name string
 function scm:checkRequirements(name)
-    print ("Checking requirements of " .. name .. "...")
+    scm:log("Checking requirements of " .. name .. "...")
     local file
     if fs.exists("./" .. self.config["libraryDirectory"] .. name .. self.config["librarySuffix"] .. "/" .. name .. ".lua") then
-        print("1","./" .. self.config["libraryDirectory"] .. name)
         file = fs.open("./" .. self.config["libraryDirectory"] .. name .. self.config["librarySuffix"] .. "/" .. name .. ".lua", "r")
     else
-        print("2", "./" .. self.config["libraryDirectory"] .. name)
         file = fs.open("./" .. self.config["libraryDirectory"] .. name .. ".lua", "r")
     end
 
@@ -592,7 +615,7 @@ function scm:checkRequirements(name)
             end
             if scriptExists then
                 -- requirement already satisfied!
-                print ("Requirement already satisfied! (" .. scriptName .. ")")
+                scm:log("Requirement already satisfied! (" .. scriptName .. ")")
             else
                 requires[#requires + 1] = scriptName
             end
@@ -603,7 +626,7 @@ function scm:checkRequirements(name)
     -- Install missing requirements
     for i = 1, #requires do
         local n = requires[i]
-        print("Trying to install " .. n .. "...")
+        scm:log("Trying to install " .. n .. "...")
         self:download(n, "library")
         local tmpName, tmpCode = self:splitNameCode(n)
         if tmpCode then n = tmpName end
@@ -614,6 +637,7 @@ end
 ---@param name string
 ---@return any
 function scm:load(name)
+    scm:log("Loading " .. name .. "...")
     local scriptExists = false
     for i = 1, #self.scripts, 1 do
         if self.scripts[i].name == name then
@@ -636,11 +660,11 @@ function scm:load(name)
         self:checkRequirements(name)
         local path = "./" .. self.config["libraryDirectory"] .. name
         local script = require(path)
+        scm:log("Done")
         return script
-    else
-        -- error installing failed
     end
-
+    
+    scm:log("Done")
     return nil
 end
 
