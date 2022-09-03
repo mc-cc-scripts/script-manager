@@ -607,18 +607,7 @@ function scm:checkRequirements(name)
                 scriptName = string.sub(line, 0)
             end
 
-            local scriptExists = false
-            for i = 1, #self.scripts, 1 do
-                if self.scripts[i].name == scriptName then
-                    scriptExists = true
-                end
-            end
-            if scriptExists then
-                -- requirement already satisfied!
-                scm:log("Requirement already satisfied! (" .. scriptName .. ")")
-            else
-                requires[#requires + 1] = scriptName
-            end
+            requires[#requires + 1] = scriptName
         end
     end
     file.close()
@@ -626,10 +615,24 @@ function scm:checkRequirements(name)
     -- Install missing requirements
     for i = 1, #requires do
         local n = requires[i]
-        scm:log("Trying to install " .. n .. "...")
-        self:download(n, "library")
         local tmpName, tmpCode = self:splitNameCode(n)
         if tmpCode then n = tmpName end
+
+        scm:log("Trying to install " .. n .. "...")
+
+        local scriptExists = false
+        for j = 1, #self.scripts, 1 do
+            if self.scripts[j].name == n then
+                scriptExists = true
+            end
+        end
+
+        if not scriptExists then
+            self:download(tmpName .. "@" .. tmpCode, "library")
+        else
+           scm:log(n .. " already exists.") 
+        end
+
         self:checkRequirements(n)
     end
 end
