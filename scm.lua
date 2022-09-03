@@ -265,10 +265,11 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
                     else
                         success = false
                     end
+
+                    tmpRequest.close()
                 else
                     success = false
                 end
-                tmpRequest.close()
 
                 if not success then
                     return nil, false
