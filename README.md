@@ -38,3 +38,22 @@ Shows all available configurations.
 ## help
 Shows all available commands and their description.
 - `<name>`: Shows the description of a command by name.
+
+## Requires
+If you want to load a library within a program and keep it updated through SCM, then you can do that with the following notation:
+
+```lua
+local scm = require("./scm")
+scm:load("testLibrary")
+```
+
+If the Library is already called by a Programm using this SCM loader, SCM will check all Libraries loaded for these comments:
+
+
+```lua
+--@requires testLibrary
+require("testLibrary")
+```
+
+The comment tells SCM to look for the sub-library and, if it's not already installed, it will try to download it.
+This prevent the programm from Crashing, should SCM not be installed.
