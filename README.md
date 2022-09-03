@@ -51,8 +51,8 @@ If the Library is already called by a Programm using this SCM loader, SCM will c
 
 
 ```lua
---@requires testLibrary
-require("testLibrary")
+--@requires subLibrary
+require("subLibrary")
 ```
 
 The comment tells SCM to look for the sub-library and, if it's not already installed, it will try to download it.
