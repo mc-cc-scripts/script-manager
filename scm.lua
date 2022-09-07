@@ -12,6 +12,7 @@ scm.config = {
     ["programSuffix"] = "-prog",
     ["librarySuffix"] = "-lib",
     ["infoFile"] = "files.txt", -- provides the structure of a git repo (paths to all files)
+    ["apiGithubGetRepos"] = "https://api.github.com/orgs/mc-cc-scripts/repos?type=all&per_page=100&page=1",
     -- Local Settings
     ["installScript"] = "1kKZ8zTS",
     ["rootDirectory"] = "",
@@ -24,7 +25,8 @@ scm.config = {
     ["printPrefix"] = "[scm] ",
     ["logDate"] = false,
     ["writeLogFile"] = false,
-    ["logFilePath"] = "logs/scm-log.txt"
+    ["logFilePath"] = "logs/scm-log.txt",
+    ["repoScriptsFile"] = "scm-repo-scripts.txt" -- will be saved in configDirectory as well
 }
 ----------------
 
@@ -130,6 +132,16 @@ $ config <name> <value>
   Updates the configuration
         ]]
     },
+    ["refresh"] = {
+        func = function (args)
+            scm:refreshAutocomplete()
+        end,
+        description = [[
+$ refresh
+  Downloads the names of all programs and libraries of the official repository.
+  Refreshes autocomplete.
+        ]]
+    },
     ["help"] = {
         ---@param args table
         func = function (args)
@@ -151,6 +163,133 @@ $ help <name>
         ]]
     }
 }
+
+function scm:refreshRepoScripts ()
+    self:log("Downloading program and library names from GitHub...")
+    local repoScripts = {}
+    
+    local programs = {}
+    local libraries = {}
+
+    local request = http.get(self.config["apiGithubGetRepos"])
+    if request then
+        local response = request.readAll()
+        request.close()
+
+        local responseTable = textutils.unserializeJSON(response)
+        for i = 1, #responseTable, 1 do
+            if string.sub(responseTable[i]["name"], -string.len(self.config["programSuffix"])) == self.config["programSuffix"] then
+                programs[string.sub(responseTable[i]["name"], 0, string.len(responseTable[i]["name"])-string.len(self.config["programSuffix"]))] = {}
+            elseif string.sub(responseTable[i]["name"], -string.len(self.config["librarySuffix"])) == self.config["librarySuffix"] then
+                libraries[string.sub(responseTable[i]["name"], 0, string.len(responseTable[i]["name"])-string.len(self.config["librarySuffix"]))] = {}
+            end
+        end
+        scm:log("Done")
+    else
+        scm:log("Download failed")
+    end
+
+    self.commands["add"]["args"] = programs
+    self.commands["require"]["args"] = libraries
+
+    repoScripts["libraries"] = libraries
+    repoScripts["programs"] = programs
+
+    local file = fs.open(self.config["configDirectory"] .. self.config["repoScriptsFile"], "w")
+    if file then
+        file.write(textutils.serializeJSON(repoScripts))
+        file.close()
+    end
+end
+
+function scm:loadRepoScripts ()
+    local file = fs.open(self.config["configDirectory"] .. self.config["repoScriptsFile"], "r")
+
+    if not file then
+        self:refreshRepoScripts()
+    else
+        local repoScripts = textutils.unserializeJSON(file.readAll()) or nil
+        if repoScripts then
+            self.commands["add"]["args"] = repoScripts["programs"]
+            self.commands["require"]["args"] = repoScripts["libraries"]
+        end
+
+        file.close()
+    end
+end
+
+function scm:prepareAutocomplete ()
+    -- prepare update and remove
+    scm:loadScripts()
+    local installedScripts = {}
+    for i = 1, #self.scripts, 1 do
+        installedScripts[self.scripts[i].name] = {}
+    end
+    installedScripts["all"] = {}
+
+    self.commands["update"]["args"] = installedScripts
+    self.commands["remove"]["args"] = installedScripts
+
+    -- prepare add and require
+    self:loadRepoScripts()
+
+    -- prepare config
+    local availableConfigs = {}
+
+    for k, _ in pairs(self.config) do
+        availableConfigs[k] = {}
+    end
+
+    self.commands["config"]["args"] = availableConfigs
+
+    -- prepare help
+    local availableCommands = {}
+
+    for k, _ in pairs(self.commands) do
+        availableCommands[k] = {}
+    end
+
+    self.commands["help"]["args"] = availableCommands
+end
+
+---@param shell table
+---@param index integer
+---@param argument string
+---@param previous table
+---@return table | nil
+local function completionFunction (shell, index, argument, previous)
+    local commands = {}
+    for k, _ in pairs(scm.commands) do
+        commands[k] = scm.commands[k]["args"] or {}
+    end
+
+    local currArg = commands
+    for i = 2, #previous do
+        if currArg[previous[i]] then
+            currArg = currArg[previous[i]]
+        else
+            return nil
+        end
+    end
+    
+    local results = {}
+    for word, _ in pairs(currArg) do
+        if word:sub(1, #argument) == argument then
+            results[#results+1] = word:sub(#argument + 1)
+        end
+    end
+    return results;
+end
+
+local function updateAutocomplete ()
+    shell.setCompletionFunction("scm", completionFunction)
+end
+
+function scm:refreshAutocomplete ()
+    scm:refreshRepoScripts()
+    scm:prepareAutocomplete()
+    updateAutocomplete()
+end
 
 ---@param message string
 function scm:log (message)
@@ -392,7 +531,7 @@ function scm:addScript (sourceObject, success)
             if self.scripts[i].source[sourceObject.sourceName] then
                 self.scripts[i].source[sourceObject.sourceName] = sourceObject.source[sourceObject.sourceName]
                 self:saveScripts()
-                
+
                 return true
             end
         end
@@ -400,12 +539,21 @@ function scm:addScript (sourceObject, success)
 
     if not scriptExists then
         scm:log("Script added: " .. sourceObject.name)
-        table.insert(self.scripts, sourceObject)
+        table.insert(self.scripts, sourceObject)    
     else
         scm:log("Script already exists.")
+        return false
     end
-
+    
     self:saveScripts()
+
+    -- update for autocomplete
+    self.commands["update"]["args"] = self.commands["update"]["args"] or {}
+    self.commands["remove"]["args"] = self.commands["remove"]["args"] or {}
+    self.commands["update"]["args"][sourceObject.name] = {}
+    self.commands["remove"]["args"][sourceObject.name] = {}
+    self:prepareAutocomplete()
+    updateAutocomplete()
 
     return true
 end
@@ -454,6 +602,7 @@ function scm:removeScript (name, keepScriptConfig)
         self:saveScripts()
     end
 
+    -- delete file
     if scriptType and fs.exists(self.config[scriptType .. "Directory"] .. name .. ".lua") then
         fs.delete(self.config[scriptType .. "Directory"] .. name .. self.config[scriptType .. "Suffix"])
         if scriptType == "library" then
@@ -464,6 +613,10 @@ function scm:removeScript (name, keepScriptConfig)
     if scriptType == "program" then
         fs.delete(name)
     end
+
+    -- update autocomplete
+    self:prepareAutocomplete()
+    updateAutocomplete()
 end
 
 function scm:removeAllScripts ()
@@ -691,6 +844,32 @@ end
 
 ---@param args table
 function scm:handleArguments (args)
+    if #args == 0 then
+        -- enable autocomplete
+        self:prepareAutocomplete()
+        updateAutocomplete()
+
+        -- some interface
+        local _, cursorY = term.getCursorPos()
+        term.setCursorPos(0, cursorY)
+        term.blit("                                 ","fffffffffffffffffffffffffffffffff","444444444444444444444444444444444")
+        term.setCursorPos(0, cursorY)
+        term.scroll(1)
+        term.blit("  SCM - Script Manager           ","fffffffffffffffffffffffffffffffff","444444444444444444444444444444444")
+        term.setCursorPos(0, cursorY)
+        term.scroll(1)
+        term.blit("  Autocomplete enabled.          ","777777777777777777777777777777777","444444444444444444444444444444444")
+        term.setCursorPos(0, cursorY)
+        term.scroll(1)
+        term.blit("  Type `scm help` to learn more. ","77777777ffffffff77777777777777777","444444444444444444444444444444444")
+        term.setCursorPos(0, cursorY)
+        term.scroll(1)
+        term.blit("                                 ","fffffffffffffffffffffffffffffffff","444444444444444444444444444444444")
+        term.setCursorPos(0, cursorY)
+        term.scroll(2)
+        return
+    end
+
     if args[1] and self.commands[args[1]] then
         self.commands[args[1]]["func"](args)
     end

@@ -37,6 +37,9 @@ Shows all installed scripts.
 Shows all available configurations.
 - `<name>`: Shows the value of a specific configuration.
 - `<name> <value>`: Updates the value of a specific configuration.
+## refresh
+Downloads the names of all programs and libraries of the official repository.
+Refreshes autocomplete.
 ## help
 Shows all available commands and their description.
 - `<name>`: Shows the description of a command by name.
