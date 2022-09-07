@@ -629,7 +629,11 @@ function scm:checkRequirements(name)
         end
 
         if not scriptExists then
-            self:download(tmpName .. "@" .. tmpCode, "library")
+            if tmpCode then
+                self:download(tmpName .. "@" .. tmpCode, "library")
+            else
+                self:download(n, "library")
+            end
         else
            scm:log(n .. " already exists.") 
         end
