@@ -21,6 +21,8 @@ By default, without parameters, `update` updates the SCM script.
 - `all`: Removes and downloads all installed scripts.
 - `<name> <sourceName>`: Removes and downloads an installed script from a specific source. Sources can be added via the `source` command.
 ## source
+**`source` commands have not yet been implemented.**
+Feel free to do so [here](https://github.com/mc-cc-scripts/script-manager/issues/2).
 - `add <scriptName> <sourceName> <source>`: Adds a source (URL, Pastebin Code, ...) with a name to a script.
 - `get <scriptName>`: Shows all sources of a script.
 - `remove <scriptName> <sourceName>`: Removes a source from a script.
@@ -39,6 +41,7 @@ Shows all available configurations.
 Shows all available commands and their description.
 - `<name>`: Shows the description of a command by name.
 
+# Example
 ## Requires
 If you want to load a library within a program and keep it updated through SCM, then you can do that with the following notation:
 
@@ -47,7 +50,7 @@ local scm = require("./scm")
 scm:load("testLibrary")
 ```
 
-If the Library is already called by a Programm using this SCM loader, SCM will check all Libraries loaded for these comments:
+If the library is already called by a program using this SCM loader, SCM will check all libraries loaded for these comments:
 
 
 ```lua
@@ -56,4 +59,4 @@ require("subLibrary")
 ```
 
 The comment tells SCM to look for the sub-library and, if it's not already installed, it will try to download it.
-This prevent the programm from Crashing, should SCM not be installed.
+This prevents the program from crashing, should SCM not be installed.
