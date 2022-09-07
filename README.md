@@ -55,8 +55,16 @@ If the library is already called by a program using this SCM loader, SCM will ch
 
 ```lua
 --@requires subLibrary
-require("subLibrary")
-```
+require("./libs/subLibrary")
 
+```
 The comment tells SCM to look for the sub-library and, if it's not already installed, it will try to download it.
 This prevents the program from crashing, should SCM not be installed.
+
+### Pastebin
+
+If there is a "@" after the library name, it will look for the library and install it from the Pastebin-Code instead of GitHub
+```lua
+--@requires subLibrary@z4VRj21Y
+```
+
