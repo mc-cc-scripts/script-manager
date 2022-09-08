@@ -842,31 +842,40 @@ function scm:init ()
     self:loadScripts()
 end
 
+---@param resetPosition boolean | nil
+function scm:cli (resetPosition)
+    if resetPosition ~= nil and resetPosition == true then
+        term.setCursorPos(1, 7)
+    end
+
+    -- enable autocomplete
+    self:prepareAutocomplete()
+    updateAutocomplete()
+
+    -- some interface
+    local _, cursorY = term.getCursorPos()
+    term.setCursorPos(1, cursorY)
+    term.blit("                                ","ffffffffffffffffffffffffffffffff","44444444444444444444444444444444")
+    term.setCursorPos(1, cursorY)
+    term.scroll(1)
+    term.blit(" SCM - Script Manager           ","ffffffffffffffffffffffffffffffff","44444444444444444444444444444444")
+    term.setCursorPos(1, cursorY)
+    term.scroll(1)
+    term.blit(" Autocomplete enabled.          ","77777777777777777777777777777777","44444444444444444444444444444444")
+    term.setCursorPos(1, cursorY)
+    term.scroll(1)
+    term.blit(" Type `scm help` to learn more. ","77777777ffffffff7777777777777777","44444444444444444444444444444444")
+    term.setCursorPos(1, cursorY)
+    term.scroll(1)
+    term.blit("                                ","ffffffffffffffffffffffffffffffff","44444444444444444444444444444444")
+    term.setCursorPos(1, cursorY)
+    term.scroll(2)
+end
+
 ---@param args table
 function scm:handleArguments (args)
     if #args == 0 then
-        -- enable autocomplete
-        self:prepareAutocomplete()
-        updateAutocomplete()
-
-        -- some interface
-        local _, cursorY = term.getCursorPos()
-        term.setCursorPos(0, cursorY)
-        term.blit("                                 ","fffffffffffffffffffffffffffffffff","444444444444444444444444444444444")
-        term.setCursorPos(0, cursorY)
-        term.scroll(1)
-        term.blit("  SCM - Script Manager           ","fffffffffffffffffffffffffffffffff","444444444444444444444444444444444")
-        term.setCursorPos(0, cursorY)
-        term.scroll(1)
-        term.blit("  Autocomplete enabled.          ","777777777777777777777777777777777","444444444444444444444444444444444")
-        term.setCursorPos(0, cursorY)
-        term.scroll(1)
-        term.blit("  Type `scm help` to learn more. ","77777777ffffffff77777777777777777","444444444444444444444444444444444")
-        term.setCursorPos(0, cursorY)
-        term.scroll(1)
-        term.blit("                                 ","fffffffffffffffffffffffffffffffff","444444444444444444444444444444444")
-        term.setCursorPos(0, cursorY)
-        term.scroll(2)
+        self:cli()
         return
     end
 
