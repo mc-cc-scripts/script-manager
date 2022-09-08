@@ -843,7 +843,7 @@ function scm:init ()
 end
 
 ---@param resetPosition boolean | nil
-function scm:cli (resetPosition)
+function scm:cli (resetPosition, args)
     if resetPosition ~= nil and resetPosition == true then
         term.setCursorPos(1, 7)
     end
@@ -870,12 +870,16 @@ function scm:cli (resetPosition)
     term.blit("                                ","ffffffffffffffffffffffffffffffff","44444444444444444444444444444444")
     term.setCursorPos(1, cursorY)
     term.scroll(2)
+
+    if args and #args == 0 then
+        read(nil, nil, shell.complete, "scm ")
+    end
 end
 
 ---@param args table
 function scm:handleArguments (args)
     if #args == 0 then
-        self:cli()
+        self:cli(false, args)
         return
     end
 
