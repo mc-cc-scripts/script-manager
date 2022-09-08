@@ -26,7 +26,9 @@ scm.config = {
     ["logDate"] = false,
     ["writeLogFile"] = false,
     ["logFilePath"] = "logs/scm-log.txt",
-    ["repoScriptsFile"] = "scm-repo-scripts.txt" -- will be saved in configDirectory as well
+    ["repoScriptsFile"] = "scm-repo-scripts.txt", -- will be saved in configDirectory as well
+    ["allowCLIPrefix"] = true,
+    ["cliPrefix"] = false
 }
 ----------------
 
@@ -852,8 +854,15 @@ function scm:cli (resetPosition, args)
     self:prepareAutocomplete()
     updateAutocomplete()
 
+    -- enable newline starting with `scm `
+    if self.config["allowCLIPrefix"] then
+        self.config["cliPrefix"] = true
+        self:saveConfig()
+    end
+
     -- some interface
     local _, cursorY = term.getCursorPos()
+    if cursorY < 7 then cursorY = 7 end
     term.setCursorPos(1, cursorY)
     term.blit("                                ","ffffffffffffffffffffffffffffffff","44444444444444444444444444444444")
     term.setCursorPos(1, cursorY)
@@ -871,8 +880,8 @@ function scm:cli (resetPosition, args)
     term.setCursorPos(1, cursorY)
     term.scroll(2)
 
-    if args and #args == 0 then
-        read(nil, nil, shell.complete, "scm ")
+    if self.config["cliPrefix"] then
+        shell.run(read(nil, nil, shell.complete, "scm "))
     end
 end
 
@@ -885,6 +894,9 @@ function scm:handleArguments (args)
 
     if args[1] and self.commands[args[1]] then
         self.commands[args[1]]["func"](args)
+        if self.config["cliPrefix"] then
+            shell.run(read(nil, nil, shell.complete, "scm "))
+        end
     end
 end
 
