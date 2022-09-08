@@ -179,11 +179,20 @@ function scm:refreshRepoScripts ()
         request.close()
 
         local responseTable = textutils.unserializeJSON(response)
+
+        local programSuffix = self.config["programSuffix"]
+        local librarySuffix = self.config["librarySuffix"]
+
         for i = 1, #responseTable, 1 do
-            if string.sub(responseTable[i]["name"], -string.len(self.config["programSuffix"])) == self.config["programSuffix"] then
-                programs[string.sub(responseTable[i]["name"], 0, string.len(responseTable[i]["name"])-string.len(self.config["programSuffix"]))] = {}
-            elseif string.sub(responseTable[i]["name"], -string.len(self.config["librarySuffix"])) == self.config["librarySuffix"] then
-                libraries[string.sub(responseTable[i]["name"], 0, string.len(responseTable[i]["name"])-string.len(self.config["librarySuffix"]))] = {}
+            local scriptName = responseTable[i]["name"]
+            if string.sub(scriptName, -string.len(programSuffix)) == programSuffix then
+                programs[
+                    string.sub(scriptName, 0, string.len(scriptName)-string.len(programSuffix))
+                ] = {}
+            elseif string.sub(scriptName, -string.len(librarySuffix)) == librarySuffix then
+                libraries[
+                    string.sub(scriptName, 0, string.len(scriptName)-string.len(librarySuffix))
+                ] = {}
             end
         end
         scm:log("Done")
