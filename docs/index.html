@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="vdlcss-min.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicons/favicon-16x16.png">
+    
+    <style>
+        :root {
+            --yellow: #DEDE6C;
+            --black: #121212;
+            --primary: var(--yellow);
+            --primary-dark: #bbbb5d;
+            --primary-light: #f3f39c;
+        }
+
+        h1 {
+            font-size: 32px;
+            color: var(--white);
+        }
+
+        h2 {
+            color: var(--white);
+        }
+
+        body {
+            color: var(--white);
+            min-height: 100%;
+        }
+
+        #script-wrapper {
+            max-width: 960px;
+        }
+    </style>
+
+    <title>SCM - Script Manager</title>
+</head>
+<body class="bg-yellow p-05 column between md:h-100">
+    <div class="h-100 w-100 bg-black column center">
+        <div class="column center md:mb-5 w-100">
+            <h1 class="yellow">Script Manager</h1>
+            <p class="m-0">Manage your ComputerCraft scripts with ease.</p>
+            <div class="grid mt-2 px-1">
+                <div class="cell-12 md:cell-4">
+                    <div class="bg-yellow p-1 rounded shadow">
+                        <h2 class="my-0 black">Install</h2>
+                        <pre class="mt-1"><code>pastebin run 1kKZ8zTS</code></pre>
+                    </div>
+                </div>
+                <div class="cell-12 md:cell-8 px-1">
+                    <h2 class="mt-0 mb-05">Features</h2>
+                    <ul>
+                        <li class="mb-05">Download scripts from Pastebin or GitHub.</li>
+                        <li class="mb-05">Update your scripts with a simple command.</li>
+                        <li class="mb-05">Auto-install missing libraries.</li>
+                        <li>
+                            <a target="_blank" href="https://github.com/mc-cc-scripts/script-manager/wiki">And more...</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row mt-1">
+                <a target="_blank" href="https://github.com/mc-cc-scripts/script-manager" class="black button mr-1">Source</a>
+                <a target="_blank" href="https://github.com/mc-cc-scripts/script-manager/wiki" class="black button">Documentation</a>
+            </div>
+            <div class="mt-1 px-1 w-100 md:w-auto">
+                <h2 class="my-0">Programs</h2>
+                <p>Installing programs can be as easy as <code class="yellow">scm add testProgram</code>.</p>
+                <p>Don't want to use our official GitHub repository? No Problem! You can change it to your own with a single command: <code class="yellow">scm config user &lt;your-name&gt;</code>.</p>
+                <p>Or, if you would rather install a program from pastebin, <code class="yellow">scm add testProgram@7ByR3NYn</code>.</p>
+                <p class="mt-2"><strong>Some of our scripts...</strong></p>
+                <div id="script-wrapper" class="scroll-x-snap row pt-05 pb-1 mb-1">
+                </div>
+            </div>
+        </div>
+    </div>
+    <template id="script-template">
+        <div 
+            class="inline-flex bg-yellow black rounded shadow p-1 mr-05 column between h-100"
+            style="min-width: 200px; max-width: 200px; width: 100%; min-height: 200px; height: 100%; white-space: normal;"
+        >
+            <div>
+                <div class="mb-05 link">
+                    <a href="#" class="black" target="_blank"><strong class="name"></strong></a>
+                </div>
+                <div class="mb-1">
+                    <em class="type"></em>
+                </div>
+                <div class="description"></div>
+            </div>
+            <div class="code">
+                <code class="black"></code>
+            </div>
+        </div>
+    </template>
+    <script>
+        let scriptWrapper = document.querySelector('#script-wrapper')
+        let template = document.querySelector('#script-template')
+
+        function addCards (data) {
+            let installScript = {}
+            installScript['Library'] = 'require'
+            installScript['Program'] = 'add'
+            
+            for (let i = 0; i < data.length; ++i) {
+                let tmpElement = template.content.cloneNode(true)
+                let tmpName = data[i].name
+                if (!tmpName.endsWith('-prog') && !tmpName.endsWith('-lib')) continue
+                let tmpType = tmpName.endsWith('-prog') ? 'Program' : 'Library'
+                tmpName = tmpName.substring(0, tmpName.lastIndexOf('-'))
+                tmpElement.querySelector('.name').innerHTML = tmpName
+                tmpElement.querySelector('.type').innerHTML = tmpType
+                tmpElement.querySelector('.description').innerHTML = data[i].description
+                tmpElement.querySelector('.link a').href = 'https://github.com/' + data[i].full_name
+                tmpElement.querySelector('.code code').innerHTML = 'scm ' + installScript[tmpType] + ' ' + tmpName
+                
+                scriptWrapper.appendChild(tmpElement)
+            }
+        }
+
+        async function getData () {
+            // check localStorage first
+            let localStorageData = localStorage.getItem('data')
+            if (localStorageData !== null && localStorageData !== 'null') return JSON.parse(localStorageData)
+
+            // call github api to get info about our scripts
+            let response = await fetch('https://api.github.com/orgs/mc-cc-scripts/repos?type=all&per_page=100&page=1')
+            let data = await response.json()
+
+            // store data in localStorage to avoid too many api calls
+            let cleanData = []
+            for (let i = 0; i < data.length; ++i) {
+                cleanData[i] = {}
+                cleanData[i].name = data[i].name
+                cleanData[i].description = data[i].description
+                cleanData[i].full_name = data[i].full_name
+            }
+            localStorage.setItem('data', JSON.stringify(cleanData))
+
+            return cleanData
+        }
+
+        getData().then(data => addCards(data))
+    </script>
+</body>
+</html>
