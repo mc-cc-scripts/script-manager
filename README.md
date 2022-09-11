@@ -1,73 +1,57 @@
-# script-manager
+# Script Manager
 
-A dependency manager for scripts to use in the mod CC: Tweaked of Minecraft.
+**SCM** is a script manager for Minecrafts ComputerCraft mod.
 
-# Install
-Download SCM with the following command:
+We are using [CC: Tweaked](https://tweaked.cc/) and in some cases some additional peripherals, which we ideally mention in the repositories of the scripts that use them.
+
+**SCM** is used so you don't have to worry too much about your libraries. You can focus on writing your program and if it uses external libraries, they will be installed automatically. Furthermore, if you want to keep your scripts up-to-date, **SCM** saves the source of the programs you've installed and lets you update them by just typing `scm update <name>`.
+
+[Documentation](https://github.com/mc-cc-scripts/script-manager/wiki) | [MIT License](https://github.com/mc-cc-scripts/script-manager/blob/master/LICENSE)
+
+# Quickstart
+## Installation
+Download **SCM** with the following command:
 
     pastebin run 1kKZ8zTS
 
-# Commands
-**Note:** "From GitHub" usually refers to repositories within this project. "Script" refers to programs **and** libraries.
-## add
-- `<name>`: Downloads a program from GitHub. Programs always have the suffix `-prog` ([Naming Conventions](https://github.com/mc-cc-scripts/.github/blob/master/profile/README.md#naming-conventions)). The suffix should not be added to the name.
-- `<name>@<pastebin code>`: Downloads a program from Pastebin.
-## require
-- `<name>`: Downloads a library from GitHub. Libraries always have the suffix `-lib` ([Naming Conventions](https://github.com/mc-cc-scripts/.github/blob/master/profile/README.md#naming-conventions)). The suffix should not be added to the name.
-- `<name>@<pastebin code>`: Downloads a library from Pastebin.
-## update
-By default, without parameters, `update` updates the SCM script.
-- `<name>`: Removes and downloads an installed script by name.
-- `all`: Removes and downloads all installed scripts.
-- `<name> <sourceName>`: Removes and downloads an installed script from a specific source. Sources can be added via the `source` command.
-## source
-**`source` commands have not yet been implemented.**
-Feel free to do so [here](https://github.com/mc-cc-scripts/script-manager/issues/2).
-- `add <scriptName> <sourceName> <source>`: Adds a source (URL, Pastebin Code, ...) with a name to a script.
-- `get <scriptName>`: Shows all sources of a script.
-- `remove <scriptName> <sourceName>`: Removes a source from a script.
-- `default <scriptName> <sourceName>`: Sets a specific source to the default of a script. The previous default script gets a generated name.
-- `rename <scriptName> <sourceName> <newSourceName>`: Updates the name of a source.
-## remove
-- `<name>`: Deletes a script by name.
-- `all`: Deletes all scripts.
-## list
-Shows all installed scripts.
-## config
-Shows all available configurations.
-- `<name>`: Shows the value of a specific configuration.
-- `<name> <value>`: Updates the value of a specific configuration.
-## refresh
-Downloads the names of all programs and libraries of the official repository.
-Refreshes autocomplete.
-## help
-Shows all available commands and their description.
-- `<name>`: Shows the description of a command by name.
+## Configuration
+There are various configurations you can change. If you want to use your own repository, you can easily change it in the [configuration](https://github.com/mc-cc-scripts/script-manager/wiki/Configuration).
 
-# Example
-## Requires
-If you want to load a library within a program and keep it updated through SCM, then you can do that with the following notation:
+## Commands
+You can find a complete list of all commands [here](https://github.com/mc-cc-scripts/script-manager/wiki/Commands).
 
-```lua
-local scm = require("./scm")
-scm:load("testLibrary")
+## Download a program
+You can either download a program from GitHub with
+```
+scm add testProgram
+```
+or from Pastebin with
+```
+scm add testProgram@7ByR3NYn
 ```
 
-If the library is already called by a program using this SCM loader, SCM will check all libraries loaded for these comments:
+## Build scripts
+### Program
+To add libraries to your programs, you will have to require **SCM** first.
+```lua
+local scm = require("./scm")
+```
+Then you can load your libraries as follows:
+```lua
+scm:load("testLibrary")
+```
+If a library is missing, **SCM** will try to install it.
 
-
+### Libraries
+Furthermore, **SCM** can also check nested sub-libraries within the loaded library. To do that, you will have to add a comment before requiring the library. This has the advantage of the libraries still being usable without **SCM**, as a comment does not interfer with the logic of the script.
 ```lua
 --@requires subLibrary
 require("./libs/subLibrary")
-
 ```
-The comment tells SCM to look for the sub-library and, if it's not already installed, it will try to download it.
-This prevents the program from crashing, should SCM not be installed.
-
 ### Pastebin
-
-If there is a "@" after the library name, it will look for the library and install it from the Pastebin-Code instead of GitHub
+You can also use libraries hosted on Pastebin. Just attach the Pastebin code at the end of the name, separated by an `@`.
 ```lua
 --@requires subLibrary@z4VRj21Y
+require("./libs/subLibrary")
 ```
 

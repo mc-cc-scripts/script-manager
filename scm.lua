@@ -12,10 +12,10 @@ scm.config = {
     ["programSuffix"] = "-prog",
     ["librarySuffix"] = "-lib",
     ["infoFile"] = "files.txt", -- provides the structure of a git repo (paths to all files)
-    ["apiGithubGetRepos"] = "https://api.github.com/orgs/mc-cc-scripts/repos?type=all&per_page=100&page=1",
-    -- Local Settings
+    ["apiGithubURL"] = "https://api.github.com/orgs/",
+    ["apiGithubGetRepos"] = "/repos?type=all&per_page=100&page=1",
     ["installScript"] = "1kKZ8zTS",
-    ["rootDirectory"] = "",
+    -- Local Settings
     ["programDirectory"] = "progs/",
     ["libraryDirectory"] = "libs/",
     ["configDirectory"] = "config/",
@@ -173,7 +173,7 @@ function scm:refreshRepoScripts ()
     local programs = {}
     local libraries = {}
 
-    local request = http.get(self.config["apiGithubGetRepos"])
+    local request = http.get(self.config["apiGithubURL"] .. self.config["user"] .. self.config["apiGithubGetRepos"])
     if request then
         local response = request.readAll()
         request.close()
@@ -503,7 +503,7 @@ function scm:downloadURL (sourceObject, targetDirectory, updateObj)
         request.close()
 
         if content then
-            local file = fs.open(self.config["rootDirectory"] .. targetDirectory .. sourceObject.name, "w")
+            local file = fs.open(targetDirectory .. sourceObject.name, "w")
             file.write(content)
             file.close()
             return sourceObject, true
