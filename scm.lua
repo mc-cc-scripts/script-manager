@@ -750,11 +750,9 @@ function scm:checkRequirements(name, localPath)
     scm:log("Checking requirements of " .. name .. "...")
     local file
     if localPath then
-        file = fs.open(localPath)
-    elseif fs.exists("./" ..
-        self.config["libraryDirectory"] .. name .. self.config["librarySuffix"] .. "/" .. name .. ".lua") then
-        file = fs.open("./" ..
-            self.config["libraryDirectory"] .. name .. self.config["librarySuffix"] .. "/" .. name .. ".lua", "r")
+        file = fs.open(localPath, "r")
+    elseif fs.exists("./" .. self.config["libraryDirectory"] .. name .. self.config["librarySuffix"] .. "/" .. name .. ".lua") then
+        file = fs.open("./" .. self.config["libraryDirectory"] .. name .. self.config["librarySuffix"] .. "/" .. name .. ".lua", "r")
     else
         file = fs.open("./" .. self.config["libraryDirectory"] .. name .. ".lua", "r")
     end
