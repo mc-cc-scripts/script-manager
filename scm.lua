@@ -745,15 +745,21 @@ function scm:updateConfig (name, value)
 end
 
 ---@param name string
-function scm:checkRequirements(name)
-    scm:log("Checking requirements of " .. name .. "...")
+---@param localPath string
+function scm:checkRequirements(name, localPath)
+    scm:log("Checking requirements of " .. (localPath or name) .. "...")
     local file
-    if fs.exists("./" .. self.config["libraryDirectory"] .. name .. self.config["librarySuffix"] .. "/" .. name .. ".lua") then
+    if localPath then
+        file = fs.open(localPath, "r")
+        if not file then
+            file = fs.open('./'..localPath .. ".lua", "r")
+        end
+    elseif fs.exists("./" .. self.config["libraryDirectory"] .. name .. self.config["librarySuffix"] .. "/" .. name .. ".lua") then
         file = fs.open("./" .. self.config["libraryDirectory"] .. name .. self.config["librarySuffix"] .. "/" .. name .. ".lua", "r")
     else
         file = fs.open("./" .. self.config["libraryDirectory"] .. name .. ".lua", "r")
     end
-
+    if not file then scm:log('File ' .. name .. ' not found') end
     -- Find requirements by searching for comment --@requires name
     local requires = {}
     while true do
@@ -799,11 +805,44 @@ function scm:checkRequirements(name)
                 self:download(n, "library")
             end
         else
-           scm:log(n .. " already exists.") 
+            scm:log(n .. " already exists.")
         end
 
         self:checkRequirements(n)
     end
+end
+
+--- used when no script with the name was found online
+--- searches locally for the script
+---@param name string
+---@return any | nil
+local function fallbackRequire(name)
+    scm:log(name .. " not found online, try to find locally")
+    --- if script does not exist
+    local possiblePath = {
+        name,
+        scm.config["libraryDirectory"] .. name,
+        scm.config["libraryDirectory"] .. name .. "/" .. name,
+        scm.config["libraryDirectory"] .. name .. "/" .. "init.lua"
+    }
+    local script
+    local success
+    ---TryFunction for Require
+    ---@param path string
+    ---@return any
+    local function tryRequire(path)
+        return require(path)
+    end
+
+    for _, path in pairs(possiblePath) do
+        success, script = pcall(tryRequire, path)
+        if success then
+            scm:checkRequirements(name, path)
+            return script
+        end
+    end
+    scm:log("Could not load " .. name)
+    return nil
 end
 
 ---@param name string
@@ -835,9 +874,8 @@ function scm:load(name)
         scm:log("Done")
         return script
     end
-    
-    scm:log("Done")
-    return nil
+
+    return fallbackRequire(name)
 end
 
 function scm:init ()
