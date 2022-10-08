@@ -14,8 +14,12 @@ scm.config = {
     ["infoFile"] = "files.txt", -- provides the structure of a git repo (paths to all files)
     ["apiGithubURL"] = "https://api.github.com/orgs/",
     ["apiGithubGetRepos"] = "/repos?type=all&per_page=100&page=1",
+    ["apiGithubGetTags"] = "https://api.github.com/repos/<USER>/<REPO>/tags",
     ["installScript"] = "1kKZ8zTS",
     -- Local Settings
+    ["currentVersion"] = "0.0.0", -- will get the newest version through the github api, no need to update here
+    ["updateAvailable"] = false,
+    ["lastVersionCheck"] = "1",
     ["programDirectory"] = "progs/",
     ["libraryDirectory"] = "libs/",
     ["configDirectory"] = "config/",
@@ -679,6 +683,13 @@ end
 function scm:updateSCM ()
     scm:log("Updating scm...")
     shell.run("pastebin", "run", self.config.installScript)
+    local success, version = self:getNewestVersion()
+    if success then
+        self.config["currentVersion"] = version
+        self.config["updateAvailable"] = false
+        self.config["lastVersionCheck"] = os.day("utc")
+        self:saveConfig()
+    end
 end
 
 ---@source: https://stackoverflow.com/a/2705804/10495683
@@ -878,6 +889,36 @@ function scm:load(name)
     return fallbackRequire(name)
 end
 
+function scm:getNewestVersion ()
+    local githubAPIgetTags = self.config["apiGithubGetTags"]
+    githubAPIgetTags = githubAPIgetTags:gsub("<USER>", self.config["user"])
+    githubAPIgetTags = githubAPIgetTags:gsub("<REPO>", self.config["repository"])
+
+    local request = http.get(githubAPIgetTags)
+
+    if request then
+        local content = request.readAll()
+        request.close()
+        local scmTags = textutils.unserializeJSON(content)
+        return true, scmTags[1]["name"]
+    else
+        self:log("Request to GitHub API failed.")
+        return false, "0.0.0"
+    end
+end
+
+function scm:checkVersion ()
+    if not self.config["updateAvailable"] and self.config["lastVersionCheck"] ~= '' .. os.day("utc") then
+        local success, newestVersion = scm:getNewestVersion()
+        if success and newestVersion ~= self.config["currentVersion"] then
+            self.config["updateAvailable"] = true
+        end
+
+        self.config["lastVersionCheck"] = os.day("utc") .. ''
+        self:saveConfig()
+    end
+end
+
 function scm:init ()
     -- Create directories
     if not fs.exists(self.config["configDirectory"]) then
@@ -889,6 +930,8 @@ function scm:init ()
 
     self:loadConfig()
     self:loadScripts()
+
+    self:checkVersion()
 end
 
 ---@param resetPosition boolean | nil
@@ -923,6 +966,11 @@ function scm:cli (resetPosition, args)
     term.blit(" Type `scm help` to learn more. ","77777777ffffffff7777777777777777","44444444444444444444444444444444")
     term.setCursorPos(1, cursorY)
     term.scroll(1)
+    if (self.config["updateAvailable"]) then
+        term.blit(" Update available!              ","7eeeeeeeeeeeeeeeee77777777777777","44444444444444444444444444444444")
+        term.setCursorPos(1, cursorY)
+        term.scroll(1)
+    end
     term.blit("                                ","ffffffffffffffffffffffffffffffff","44444444444444444444444444444444")
     term.setCursorPos(1, cursorY)
     term.scroll(2)
