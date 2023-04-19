@@ -477,9 +477,9 @@ function scm:downloadPastebin (sourceObject, code, targetDirectory, updateObj)
     end
 
     if sourceObject.type == "program" then
-        shell.run("pastebin", "get", code, sourceObject.name .. ".lua")
+        shell.run("pastebin", "get", code, sourceObject.name)
     else
-        shell.run("pastebin", "get", code, targetDirectory .. sourceObject.name .. ".lua")
+        shell.run("pastebin", "get", code, targetDirectory .. sourceObject.name)
     end
 
     return sourceObject, true
@@ -604,15 +604,15 @@ function scm:removeScript (name, keepScriptConfig)
     local o = {}
     local scriptType = nil
 
-    if keepScriptConfig ~= true then
-        for i = 1, #self.scripts, 1 do
-            if self.scripts[i].name ~= name then
-                table.insert(o, self.scripts[i])
-            else 
-                scriptType = self.scripts[i].type
-            end
+    for i = 1, #self.scripts, 1 do
+        if self.scripts[i].name ~= name then
+            table.insert(o, self.scripts[i])
+        else 
+            scriptType = self.scripts[i].type
         end
-
+    end
+    
+    if keepScriptConfig ~= true then
         self.scripts = o
         self:saveScripts()
     end
