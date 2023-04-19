@@ -662,6 +662,7 @@ function scm:updateScript (name, sourceName)
         if self.scripts[i].name == name then
             updateObj.source[sourceName] = self.scripts[i].source[sourceName]
             updateObj.type = self.scripts[i].type
+            break
         end
     end
 
