@@ -406,7 +406,7 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
     local infoFileContent = readInfoFile(infoFileUrl)
     if not infoFileContent then
         isBackupFile = true
-        local filesUrl = baseUrl .. self.config["infoFile"]
+        local filesUrl = baseUrl .. self.config["backUpFile"]
         local request = http.get(filesUrl)
         if not request then
             return false
@@ -430,7 +430,7 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
 
         local filePaths = {}
         if isBackupFile then
-            file = fs.open(targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. self.config["infoFile"], "r")
+            file = fs.open(targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. self.config["backUpFile"], "r")
             for line in file.readLine do
                 filePaths[#filePaths + 1] = line
             end
