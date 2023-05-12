@@ -381,7 +381,7 @@ function scm:readInfoFile(url)
         if infoFileContent and infoFileContent ~= "" then
             infoFileContent = textutils.unserialiseJSON(infoFileContent)
 
-            -- return infoFileContent
+            return infoFileContent
         end
     end
 end
