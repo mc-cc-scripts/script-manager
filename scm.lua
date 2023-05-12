@@ -2,7 +2,7 @@
 ---@class scm
 local scm = {}
 
--- Configuration 
+-- Configuration
 scm.config = {
     -- Git Settings (In this case on GitHub, not tested with others)
     ["user"] = "mc-cc-scripts",
@@ -41,7 +41,7 @@ scm.scripts = {}
 scm.commands = {
     ["require"] = {
         ---@param args table
-        func = function (args)
+        func = function(args)
             scm:download(args[2], "library", nil)
         end,
         description = [[
@@ -53,7 +53,7 @@ $ require <name>@<pastebinCode>
     },
     ["add"] = {
         ---@param args table
-        func = function (args)
+        func = function(args)
             scm:download(args[2], "program", nil)
         end,
         description = [[
@@ -65,7 +65,7 @@ $ add <name>@<pastebinCode>
     },
     ["update"] = {
         ---@param args table
-        func = function (args)
+        func = function(args)
             if args[2] == "all" then
                 scm:updateAllScripts()
             elseif args[3] then
@@ -89,10 +89,10 @@ $ update <name> <srcName>
     },
     ["remove"] = {
         ---@param args table
-        func = function (args)
+        func = function(args)
             if args[2] == "all" then
                 scm:removeAllScripts()
-            else 
+            else
                 scm:removeScript(args[2])
             end
         end,
@@ -105,7 +105,7 @@ $ remove all
     },
     ["list"] = {
         ---@param _ table
-        func = function (_)
+        func = function(_)
             scm:listScripts()
         end,
         description = [[
@@ -115,7 +115,7 @@ $ list
     },
     ["config"] = {
         ---@param args table
-        func = function (args)
+        func = function(args)
             if args[3] then
                 scm:updateConfig(args[2], args[3])
             elseif args[2] then
@@ -123,7 +123,7 @@ $ list
                     print(args[2], tostring(scm.config[args[2]]))
                 end
             else
-                print ("You can currently configure the following variables:")
+                print("You can currently configure the following variables:")
                 for cname, cvalue in pairs(scm.config) do
                     textutils.pagedPrint(cname .. "\t" .. tostring(cvalue))
                 end
@@ -139,7 +139,7 @@ $ config <name> <value>
         ]]
     },
     ["refresh"] = {
-        func = function (args)
+        func = function(args)
             scm:refreshAutocomplete()
         end,
         description = [[
@@ -150,7 +150,7 @@ $ refresh
     },
     ["help"] = {
         ---@param args table
-        func = function (args)
+        func = function(args)
             if args[2] then
                 if scm.commands[args[2]] then
                     textutils.pagedPrint(args[2] .. "\n" .. scm.commands[args[2]]["description"])
@@ -170,10 +170,10 @@ $ help <name>
     }
 }
 
-function scm:refreshRepoScripts ()
+function scm:refreshRepoScripts()
     self:log("Downloading program and library names from GitHub...")
     local repoScripts = {}
-    
+
     local programs = {}
     local libraries = {}
 
@@ -191,11 +191,11 @@ function scm:refreshRepoScripts ()
             local scriptName = responseTable[i]["name"]
             if string.sub(scriptName, -string.len(programSuffix)) == programSuffix then
                 programs[
-                    string.sub(scriptName, 0, string.len(scriptName)-string.len(programSuffix))
+                string.sub(scriptName, 0, string.len(scriptName) - string.len(programSuffix))
                 ] = {}
             elseif string.sub(scriptName, -string.len(librarySuffix)) == librarySuffix then
                 libraries[
-                    string.sub(scriptName, 0, string.len(scriptName)-string.len(librarySuffix))
+                string.sub(scriptName, 0, string.len(scriptName) - string.len(librarySuffix))
                 ] = {}
             end
         end
@@ -217,7 +217,7 @@ function scm:refreshRepoScripts ()
     end
 end
 
-function scm:loadRepoScripts ()
+function scm:loadRepoScripts()
     local file = fs.open(self.config["configDirectory"] .. self.config["repoScriptsFile"], "r")
 
     if not file then
@@ -233,7 +233,7 @@ function scm:loadRepoScripts ()
     end
 end
 
-function scm:prepareAutocomplete ()
+function scm:prepareAutocomplete()
     -- prepare update and remove
     scm:loadScripts()
     local installedScripts = {}
@@ -272,7 +272,7 @@ end
 ---@param argument string
 ---@param previous table
 ---@return table | nil
-local function completionFunction (shell, index, argument, previous)
+local function completionFunction(shell, index, argument, previous)
     local commands = {}
     for k, _ in pairs(scm.commands) do
         commands[k] = scm.commands[k]["args"] or {}
@@ -286,35 +286,35 @@ local function completionFunction (shell, index, argument, previous)
             return nil
         end
     end
-    
+
     local results = {}
     for word, _ in pairs(currArg) do
         if word:sub(1, #argument) == argument then
-            results[#results+1] = word:sub(#argument + 1)
+            results[#results + 1] = word:sub(#argument + 1)
         end
     end
     return results;
 end
 
-local function updateAutocomplete ()
+local function updateAutocomplete()
     shell.setCompletionFunction("scm", completionFunction)
 end
 
-function scm:refreshAutocomplete ()
+function scm:refreshAutocomplete()
     scm:refreshRepoScripts()
     scm:prepareAutocomplete()
     updateAutocomplete()
 end
 
 ---@param message string
-function scm:log (message)
+function scm:log(message)
     local datetime = ""
     if self.config["logDate"] then datetime = os.date("[%Y-%m-%d %H:%M:%S] ") end
-    if self.config["verbose"] then print (self.config["printPrefix"] .. message) end
+    if self.config["verbose"] then print(self.config["printPrefix"] .. message) end
 
     if self.config["writeLogFile"] then
         local file = fs.open(self.config["logFilePath"], "a")
-        file.write (datetime .. message .. "\n")
+        file.write(datetime .. message .. "\n")
         file.close()
     end
 end
@@ -322,9 +322,9 @@ end
 ---@param str string
 ---@return string | nil
 ---@return string | nil
-function scm:splitNameCode (str)
+function scm:splitNameCode(str)
     local separator = string.find(str, "@")
-    
+
     if separator then
         local name = string.sub(str, 1, separator - 1)
         local code = string.sub(str, separator + 1)
@@ -338,9 +338,9 @@ end
 ---@param fileType string
 ---@param updateObj table | nil
 ---@return boolean
-function scm:download (target, fileType, updateObj)
+function scm:download(target, fileType, updateObj)
     scm:log("Downloading " .. fileType .. " " .. target .. "...")
-    if target == nil then 
+    if target == nil then
         --@TODO: Error handling
         return false
     end
@@ -382,11 +382,11 @@ end
 ---@param updateObj table | nil
 ---@return table | nil
 ---@return boolean
-function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
-    local baseUrl = self.config["rawURL"] .. 
-                    self.config["user"] .. "/" .. 
-                    repository .. "/" .. 
-                    self.config["branch"] .. "/"
+function scm:downloadGit(sourceObject, repository, targetDirectory, updateObj)
+    local baseUrl = self.config["rawURL"] ..
+        self.config["user"] .. "/" ..
+        repository .. "/" ..
+        self.config["branch"] .. "/"
 
     local filesUrl = baseUrl .. self.config["infoFile"]
 
@@ -396,12 +396,16 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
         request.close()
 
         if content then
-            local file = fs.open(targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. self.config["infoFile"], "w")
+            local file = fs.open(targetDirectory .. sourceObject.name
+                .. self.config[sourceObject.type .. "Suffix"]
+                .. "/" .. self.config["infoFile"], "w")
             file.write(content)
             file.close()
 
             local filePaths = {}
-            file = fs.open(targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. self.config["infoFile"], "r")
+            file = fs.open(targetDirectory .. sourceObject.name
+                .. self.config[sourceObject.type .. "Suffix"]
+                .. "/" .. self.config["infoFile"], "r")
             for line in file.readLine do
                 filePaths[#filePaths + 1] = line
             end
@@ -413,7 +417,9 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
                 if tmpRequest then
                     local tmpContent = tmpRequest.readAll()
                     if tmpContent then
-                        local tmpFile = fs.open(targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. filePaths[i], "w")
+                        local tmpFile = fs.open(targetDirectory .. sourceObject.name
+                            .. self.config[sourceObject.type .. "Suffix"]
+                            .. "/" .. filePaths[i], "w")
                         tmpFile.write(tmpContent)
                         tmpFile.close()
                     else
@@ -433,17 +439,21 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
             -- create a link that calls the file within the program directory
             if sourceObject.type == "program" then
                 local progamLink = fs.open(sourceObject.name, "w")
-                progamLink.write("shell.execute(\"" .. targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. sourceObject.name .. ".lua" .. "\", ...)")
+                progamLink.write("shell.execute(\"" .. targetDirectory .. sourceObject.name ..
+                    self.config[sourceObject.type .. "Suffix"]
+                    .. "/" .. sourceObject.name .. ".lua" .. "\", ...)")
                 progamLink.close()
             elseif sourceObject.type == "library" then
                 local libraryLink = fs.open(targetDirectory .. sourceObject.name .. ".lua", "w")
-                
+
                 local tmpName = sourceObject.name
                 if tmpName:find("%.") then
                     tmpName = tmpName:match("(.+)%..+$")
                 end
 
-                libraryLink.write("return require(\"./" .. self.config["libraryDirectory"] .. tmpName .. self.config[sourceObject.type .. "Suffix"] .. "/" .. tmpName .. "\")")
+                libraryLink.write("return require(\"./" .. self.config["libraryDirectory"]
+                    .. tmpName .. self.config[sourceObject.type .. "Suffix"]
+                    .. "/" .. tmpName .. "\")")
                 libraryLink.close()
             end
 
@@ -460,13 +470,13 @@ end
 ---@param updateObj table | nil
 ---@return table | nil
 ---@return boolean
-function scm:downloadPastebin (sourceObject, code, targetDirectory, updateObj)
+function scm:downloadPastebin(sourceObject, code, targetDirectory, updateObj)
     -- Only download if it does not already exist, or if it should be updated
     if fs.exists(targetDirectory .. sourceObject.name) then
         if updateObj then
             fs.delete(targetDirectory .. sourceObject.name)
             sourceObject = updateObj
-        else 
+        else
             -- File already exists, you should use update
             return nil, false
         end
@@ -490,7 +500,7 @@ end
 ---@param updateObj table | nil
 ---@return table | nil
 ---@return boolean
-function scm:downloadURL (sourceObject, targetDirectory, updateObj)
+function scm:downloadURL(sourceObject, targetDirectory, updateObj)
     local sourceName = "default" or updateObj.sourceName
     if updateObj then
         sourceObject.name = sourceObject.name or updateObj.name
@@ -519,7 +529,7 @@ end
 
 ---@param url string
 ---@return string
-function scm:getNameFromURL (url)
+function scm:getNameFromURL(url)
     -- Gets the filename + extension from a url (everything after last /)
     local name = url:match("[^/]+$")
 
@@ -534,7 +544,7 @@ end
 ---@param sourceObject table | nil
 ---@param success boolean
 ---@return boolean
-function scm:addScript (sourceObject, success)
+function scm:addScript(sourceObject, success)
     if not success or not sourceObject then return false end
     scm:log("Adding script " .. sourceObject.name .. "...")
     local scriptExists = false
@@ -554,12 +564,12 @@ function scm:addScript (sourceObject, success)
 
     if not scriptExists then
         scm:log("Script added: " .. sourceObject.name)
-        table.insert(self.scripts, sourceObject)    
+        table.insert(self.scripts, sourceObject)
     else
         scm:log("Script already exists.")
         return false
     end
-    
+
     self:saveScripts()
 
     -- update for autocomplete
@@ -573,13 +583,13 @@ function scm:addScript (sourceObject, success)
     return true
 end
 
-function scm:saveScripts ()
+function scm:saveScripts()
     local file = fs.open(self.config["configDirectory"] .. self.config["scriptFile"], "w")
     file.write(textutils.serializeJSON(self.scripts))
     file.close()
 end
 
-function scm:loadScripts ()
+function scm:loadScripts()
     local file = fs.open(self.config["configDirectory"] .. self.config["scriptFile"], "r")
 
     if not file then
@@ -590,16 +600,16 @@ function scm:loadScripts ()
     end
 end
 
-function scm:listScripts ()
-    print ("name", "type")
-    print ("----------------------")
+function scm:listScripts()
+    print("name", "type")
+    print("----------------------")
     for i = 1, #self.scripts, 1 do
-        print (self.scripts[i].name, self.scripts[i].type)
+        print(self.scripts[i].name, self.scripts[i].type)
     end
 end
 
 ---@param name string
-function scm:removeScript (name, keepScriptConfig)
+function scm:removeScript(name, keepScriptConfig)
     scm:log("Removing script: " .. name)
     local o = {}
     local scriptType = nil
@@ -608,7 +618,7 @@ function scm:removeScript (name, keepScriptConfig)
         for i = 1, #self.scripts, 1 do
             if self.scripts[i].name ~= name then
                 table.insert(o, self.scripts[i])
-            else 
+            else
                 scriptType = self.scripts[i].type
             end
         end
@@ -634,7 +644,7 @@ function scm:removeScript (name, keepScriptConfig)
     updateAutocomplete()
 end
 
-function scm:removeAllScripts ()
+function scm:removeAllScripts()
     local tmpScripts = {}
     for i = 1, #self.scripts, 1 do
         table.insert(tmpScripts, self.scripts[i].name)
@@ -648,7 +658,7 @@ end
 ---@param name string
 ---@param sourceName string
 ---@return boolean
-function scm:updateScript (name, sourceName)
+function scm:updateScript(name, sourceName)
     if not sourceName then sourceName = "default" end
 
     local updateObj = {
@@ -674,13 +684,13 @@ function scm:updateScript (name, sourceName)
     return false
 end
 
-function scm:updateAllScripts ()
+function scm:updateAllScripts()
     for i = 1, #self.scripts, 1 do
         self:updateScript(self.scripts[i].name, "default")
     end
 end
 
-function scm:updateSCM ()
+function scm:updateSCM()
     scm:log("Updating scm...")
     shell.run("pastebin", "run", self.config.installScript)
     local success, version = self:getNewestVersion()
@@ -695,19 +705,19 @@ end
 ---@source: https://stackoverflow.com/a/2705804/10495683
 ---@param T table
 ---@return integer
-local function tablelength (T)
+local function tablelength(T)
     local count = 0
     for _ in pairs(T) do count = count + 1 end
     return count
 end
 
-function scm:saveConfig ()
+function scm:saveConfig()
     local file = fs.open(self.config["configDirectory"] .. self.config["configFile"], "w")
     file.write(textutils.serializeJSON(self.config))
     file.close()
 end
 
-function scm:loadConfig ()
+function scm:loadConfig()
     local file = fs.open(self.config["configDirectory"] .. self.config["configFile"], "r")
 
     if not file then
@@ -720,22 +730,27 @@ function scm:loadConfig ()
         -- otherwise the config is corrupted and will be overwritten
         if tablelength(temp) == tablelength(self.config) then
             self.config = temp
-        else self:saveConfig() end
+        else
+            self:saveConfig()
+        end
         file.close()
     end
 end
 
 ---@param name string
 ---@param value string
-function scm:updateConfig (name, value)
+function scm:updateConfig(name, value)
     local writeConfig = true
 
     if name and value then
         if self.config[name] ~= nil then
             if type(self.config[name]) == type(true) then
                 -- Check for boolean
-                if value == "true" then self.config[name] = true
-                elseif value == "false" then self.config[name] = false end
+                if value == "true" then
+                    self.config[name] = true
+                elseif value == "false" then
+                    self.config[name] = false
+                end
             else
                 -- We assume it's a string
                 self.config[name] = value
@@ -756,17 +771,19 @@ function scm:updateConfig (name, value)
 end
 
 ---@param name string
----@param localPath string
+---@param localPath string | nil | unknown
 function scm:checkRequirements(name, localPath)
     scm:log("Checking requirements of " .. (localPath or name) .. "...")
     local file
     if localPath then
         file = fs.open(localPath, "r")
         if not file then
-            file = fs.open('./'..localPath .. ".lua", "r")
+            file = fs.open('./' .. localPath .. ".lua", "r")
         end
     elseif fs.exists("./" .. self.config["libraryDirectory"] .. name .. self.config["librarySuffix"] .. "/" .. name .. ".lua") then
-        file = fs.open("./" .. self.config["libraryDirectory"] .. name .. self.config["librarySuffix"] .. "/" .. name .. ".lua", "r")
+        file = fs.open("./" .. self.config["libraryDirectory"]
+            .. name .. self.config["librarySuffix"]
+            .. "/" .. name .. ".lua", "r")
     else
         file = fs.open("./" .. self.config["libraryDirectory"] .. name .. ".lua", "r")
     end
@@ -889,7 +906,7 @@ function scm:load(name)
     return fallbackRequire(name)
 end
 
-function scm:getNewestVersion ()
+function scm:getNewestVersion()
     local githubAPIgetTags = self.config["apiGithubGetTags"]
     githubAPIgetTags = githubAPIgetTags:gsub("<USER>", self.config["user"])
     githubAPIgetTags = githubAPIgetTags:gsub("<REPO>", self.config["repository"])
@@ -907,7 +924,7 @@ function scm:getNewestVersion ()
     end
 end
 
-function scm:checkVersion ()
+function scm:checkVersion()
     if not self.config["updateAvailable"] and self.config["lastVersionCheck"] ~= '' .. os.day("utc") then
         local success, newestVersion = scm:getNewestVersion()
         if success and newestVersion ~= self.config["currentVersion"] then
@@ -919,7 +936,7 @@ function scm:checkVersion ()
     end
 end
 
-function scm:init ()
+function scm:init()
     -- Create directories
     if not fs.exists(self.config["configDirectory"]) then
         fs.makeDir(self.config["configDirectory"])
@@ -935,7 +952,7 @@ function scm:init ()
 end
 
 ---@param resetPosition boolean | nil
-function scm:cli (resetPosition, args)
+function scm:cli(resetPosition, args)
     if resetPosition ~= nil and resetPosition == true then
         term.setCursorPos(1, 7)
     end
@@ -954,24 +971,36 @@ function scm:cli (resetPosition, args)
     local _, cursorY = term.getCursorPos()
     if cursorY < 7 then cursorY = 7 end
     term.setCursorPos(1, cursorY)
-    term.blit("                                ","ffffffffffffffffffffffffffffffff","44444444444444444444444444444444")
+    term.blit("                                ",
+        "ffffffffffffffffffffffffffffffff",
+        "44444444444444444444444444444444")
     term.setCursorPos(1, cursorY)
     term.scroll(1)
-    term.blit(" SCM - Script Manager           ","ffffffffffffffffffffffffffffffff","44444444444444444444444444444444")
+    term.blit(" SCM - Script Manager           ",
+        "ffffffffffffffffffffffffffffffff",
+        "44444444444444444444444444444444")
     term.setCursorPos(1, cursorY)
     term.scroll(1)
-    term.blit(" Autocomplete enabled.          ","77777777777777777777777777777777","44444444444444444444444444444444")
+    term.blit(" Autocomplete enabled.          ",
+        "77777777777777777777777777777777",
+        "44444444444444444444444444444444")
     term.setCursorPos(1, cursorY)
     term.scroll(1)
-    term.blit(" Type `scm help` to learn more. ","77777777ffffffff7777777777777777","44444444444444444444444444444444")
+    term.blit(" Type `scm help` to learn more. ",
+        "77777777ffffffff7777777777777777",
+        "44444444444444444444444444444444")
     term.setCursorPos(1, cursorY)
     term.scroll(1)
     if (self.config["updateAvailable"]) then
-        term.blit(" Update available!              ","7eeeeeeeeeeeeeeeee77777777777777","44444444444444444444444444444444")
+        term.blit(" Update available!              ",
+            "7eeeeeeeeeeeeeeeee77777777777777",
+            "44444444444444444444444444444444")
         term.setCursorPos(1, cursorY)
         term.scroll(1)
     end
-    term.blit("                                ","ffffffffffffffffffffffffffffffff","44444444444444444444444444444444")
+    term.blit("                                ",
+        "ffffffffffffffffffffffffffffffff",
+        "44444444444444444444444444444444")
     term.setCursorPos(1, cursorY)
     term.scroll(2)
 
@@ -981,7 +1010,7 @@ function scm:cli (resetPosition, args)
 end
 
 ---@param args table
-function scm:handleArguments (args)
+function scm:handleArguments(args)
     if #args == 0 then
         self:cli(false, args)
         return
@@ -996,5 +1025,5 @@ function scm:handleArguments (args)
 end
 
 scm:init()
-scm:handleArguments({...})
+scm:handleArguments({ ... })
 return scm
