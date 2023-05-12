@@ -11,7 +11,8 @@ scm.config = {
     ["rawURL"] = "https://raw.githubusercontent.com/",
     ["programSuffix"] = "-prog",
     ["librarySuffix"] = "-lib",
-    ["infoFile"] = "files.txt", -- provides the structure of a git repo (paths to all files)
+    ["backUpFile"] = "files.txt", -- provides the structure of a git repo (paths to all files)
+    ["infoFile"] = "infoFile.json",
     ["apiGithubURL"] = "https://api.github.com/orgs/",
     ["apiGithubGetRepos"] = "/repos?type=all&per_page=100&page=1",
     ["apiGithubGetTags"] = "https://api.github.com/repos/<USER>/<REPO>/tags",
@@ -376,6 +377,18 @@ function scm:download (target, fileType, updateObj)
     return scm:addScript(self:downloadGit(sourceObject, repository, self.config[fileType .. "Directory"], updateObj))
 end
 
+local function readInfoFile(url)
+    local file = http.get(url)
+    if file then
+        local infoFileContent = file.readAll();
+        file.close()
+        if infoFileContent and infoFileContent ~= "" then
+            infoFileContent = textutils.unserialiseJSON(infoFileContent)
+            return infoFileContent
+        end
+    end
+end
+
 ---@param sourceObject table
 ---@param repository string
 ---@param targetDirectory string
@@ -388,69 +401,83 @@ function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
                     repository .. "/" .. 
                     self.config["branch"] .. "/"
 
-    local filesUrl = baseUrl .. self.config["infoFile"]
-
-    local request = http.get(filesUrl)
-    if request then
-        local content = request.readAll()
+    local infoFileUrl = baseUrl .. "/" .. self.config["infoFile"]
+    local isBackupFile = false
+    local infoFileContent = readInfoFile(infoFileUrl)
+    if not infoFileContent then
+        isBackupFile = true
+        local filesUrl = baseUrl .. self.config["infoFile"]
+        local request = http.get(filesUrl)
+        if not request then
+            return false
+        end
+        infoFileContent = request.readAll()
         request.close()
+    end
 
-        if content then
-            local file = fs.open(targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. self.config["infoFile"], "w")
-            file.write(content)
+    if infoFileContent then
+        local file = fs.open(
+            targetDirectory ..
+            sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" ..
+            (isBackupFile and self.config["backUpFile"] or self.config["infoFile"]),
+            "w")
+            if isBackupFile then
+                file.write(infoFileContent)
+            else
+                file.write(textutils.serializeJSON(infoFileContent))
+            end
             file.close()
 
-            local filePaths = {}
+        local filePaths = {}
+        if isBackupFile then
             file = fs.open(targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. self.config["infoFile"], "r")
             for line in file.readLine do
                 filePaths[#filePaths + 1] = line
             end
             file.close()
+        else
+            for _, line in pairs(infoFileContent["files"]) do
+                filePaths[#filePaths + 1] = line
+                scm:log(line)
+            end
+        end
 
-            for i = 1, #filePaths, 1 do
-                local success = true
-                local tmpRequest = http.get(baseUrl .. filePaths[i])
-                if tmpRequest then
-                    local tmpContent = tmpRequest.readAll()
-                    if tmpContent then
-                        local tmpFile = fs.open(targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. filePaths[i], "w")
-                        tmpFile.write(tmpContent)
-                        tmpFile.close()
-                    else
-                        success = false
-                    end
-
-                    tmpRequest.close()
+        for i = 1, #filePaths, 1 do
+            local tmpRequest = http.get(baseUrl .. filePaths[i])
+            if tmpRequest then
+                local tmpContent = tmpRequest.readAll()
+                tmpRequest.close()
+                if tmpContent then
+                    local tmpFile = fs.open(targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. filePaths[i], "w")
+                    tmpFile.write(tmpContent)
+                    tmpFile.close()
                 else
-                    success = false
-                end
-
-                if not success then
                     return nil, false
                 end
+            else
+                return nil, false
             end
-
-            -- create a link that calls the file within the program directory
-            if sourceObject.type == "program" then
-                local progamLink = fs.open(sourceObject.name, "w")
-                progamLink.write("shell.execute(\"" .. targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. sourceObject.name .. ".lua" .. "\", ...)")
-                progamLink.close()
-            elseif sourceObject.type == "library" then
-                local libraryLink = fs.open(targetDirectory .. sourceObject.name .. ".lua", "w")
-                
-                local tmpName = sourceObject.name
-                if tmpName:find("%.") then
-                    tmpName = tmpName:match("(.+)%..+$")
-                end
-
-                libraryLink.write("return require(\"./" .. self.config["libraryDirectory"] .. tmpName .. self.config[sourceObject.type .. "Suffix"] .. "/" .. tmpName .. "\")")
-                libraryLink.close()
-            end
-
-            return sourceObject, true
         end
-    end
 
+        -- create a link that calls the file within the program directory
+        if sourceObject.type == "program" then
+            local progamLink = fs.open(sourceObject.name, "w")
+            progamLink.write("shell.execute(\"" .. targetDirectory .. sourceObject.name .. self.config[sourceObject.type .. "Suffix"] .. "/" .. sourceObject.name .. ".lua" .. "\", ...)")
+            progamLink.close()
+        elseif sourceObject.type == "library" then
+            local libraryLink = fs.open(targetDirectory .. sourceObject.name .. ".lua", "w")
+            
+            local tmpName = sourceObject.name
+            if tmpName:find("%.") then
+                tmpName = tmpName:match("(.+)%..+$")
+            end
+
+            libraryLink.write("return require(\"./" .. self.config["libraryDirectory"] .. tmpName .. self.config[sourceObject.type .. "Suffix"] .. "/" .. tmpName .. "\")")
+            libraryLink.close()
+        end
+
+        return sourceObject, true
+    end
     return nil, false
 end
 
