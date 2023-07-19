@@ -37,7 +37,19 @@ scm.config = {
 }
 ----------------
 
+---@class source
+---@field [string] string
 
+---@class script
+---@field type string
+---@field source source
+---@field name string
+---@field version string
+---@field path string
+---@field referenceFile string
+
+---@class scripts
+---@field [any] script
 scm.scripts = {}
 scm.commands = {
     ["require"] = {
@@ -339,13 +351,14 @@ end
 ---@param fileType string
 ---@param updateObj table | nil
 ---@return boolean
-function scm:download (target, fileType, updateObj)
+function scm:download (target, fileType, updateObj, version)
     scm:log("Downloading " .. fileType .. " " .. target .. "...")
     if target == nil then 
         --@TODO: Error handling
         return false
     end
 
+    ---@class script
     local sourceObject = {
         name = nil,
         source = {
@@ -373,8 +386,16 @@ function scm:download (target, fileType, updateObj)
     end
     local repository = target .. suffix
     sourceObject.name = target
+    sourceObject.version = version
+    sourceObject.path = self.config[fileType .. "Directory"] ..
+        sourceObject.name ..
+        (sourceObject.version and self.config["versionSuffix"] .. sourceObject.version or '') ..
+        self.config[sourceObject.type .. "Suffix"]
+    sourceObject.referenceFile = self.config[fileType .. "Directory"] .. sourceObject.name ..
+        (sourceObject.version and self.config["versionSuffix"] .. sourceObject.version or '') ..
+        ".lua"
 
-    return scm:addScript(self:downloadGit(sourceObject, repository, self.config[fileType .. "Directory"], updateObj))
+    return scm:addScript(self:downloadGit(sourceObject, repository, updateObj))
 end
 
 local function readInfoFile(url)
@@ -389,21 +410,34 @@ local function readInfoFile(url)
     end
 end
 
----@param sourceObject table
+---@param sourceObject script
 ---@param repository string
 ---@param targetDirectory string
 ---@param updateObj table | nil
 ---@return table | nil
 ---@return boolean
-function scm:downloadGit (sourceObject, repository, targetDirectory, updateObj)
-    local baseUrl = self.config["rawURL"] .. 
-                    self.config["user"] .. "/" .. 
-                    repository .. "/" .. 
-                    self.config["branch"] .. "/"
+function scm:downloadGit (sourceObject, repository, updateObj)
+    -- local baseUrl = self.config["rawURL"] .. 
+    --                 self.config["user"] .. "/" .. 
+    --                 repository .. "/" .. 
+    --                 self.config["branch"] .. "/"
 
-    local infoFileUrl = baseUrl .. "/" .. self.config["infoFile"]
+    local baseUrl = self.config["rawURL"] ..
+        self.config["user"] .. "/" ..
+        repository .. "/"
+
+    local infoFileUrl = baseUrl .. "/" .. self.config["branch"] .. "/".. self.config["infoFile"]
     local isBackupFile = false
     local infoFileContent = readInfoFile(infoFileUrl)
+    if sourceObject.version then
+        if not infoFileContent.versions then
+            scm:log("Could not find versions in Repo")
+            return nil, false
+        end
+        baseUrl = baseUrl .. "/" .. infoFileContent.versions[sourceObject.version] .. "/"
+        infoFileUrl =  baseUrl .. self.config["infoFile"]
+        
+    end
     if not infoFileContent then
         isBackupFile = true
         local filesUrl = baseUrl .. self.config["backUpFile"]
