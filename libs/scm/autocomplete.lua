@@ -1,23 +1,15 @@
----@class SCMAutoComplete
+
+---@class Autocomplete
 local Autocomplete = {}
+table.insert(scm, Autocomplete)
 
 do
-    ---@class SCMNet
-    local Net
-    ---@class SCMScriptManager
-    local ScriptManager
-    ---@class SCMUI
-    local UI
-    ---@class SCMConfig
-    local config
-    ---@type fun(...):SCMLog
-    local log
-    -- TODO: add autocomplete
+    local log = function(...) scm.log:log(...) end
     Autocomplete.commands = {
         ["require"] = {
             ---@param args table
             func = function(args)
-                Net:download(args[2], "library", nil)
+                scm.Net:download(args[2], "library", nil)
             end,
             description = [[
 Adds a library with all its dependencies.
@@ -29,7 +21,7 @@ $ require <name>@<pastebinCode>
         ["add"] = {
             ---@param args table
             func = function(args)
-                Net:download(args[2], "program", nil)
+                scm.Net:download(args[2], "program", nil)
             end,
             description = [[
 Adds a program with all its dependencies.
@@ -42,13 +34,13 @@ $ add <name>@<pastebinCode>
             ---@param args table
             func = function(args)
                 if args[2] == "all" then
-                    ScriptManager:updateAllScripts()
+                    scm.ScriptManager:updateAllScripts()
                 elseif args[3] then
-                    ScriptManager:updateScript(args[2], args[3])
+                    scm.ScriptManager:updateScript(args[2], args[3])
                 elseif args[2] then
-                    ScriptManager:updateScript(args[2], nil)
+                    scm.ScriptManager:updateScript(args[2], nil)
                 else
-                    Net:updateSCM()
+                    scm.Net:updateSCM()
                 end
             end,
             description = [[
@@ -66,9 +58,9 @@ $ update <name> <srcName>
             ---@param args table
             func = function(args)
                 if args[2] == "all" then
-                    ScriptManager:removeAllScripts()
+                    scm.ScriptManager:removeAllScripts()
                 else
-                    ScriptManager:removeScript(args[2])
+                    scm.ScriptManager:removeScript(args[2])
                 end
             end,
             description = [[
@@ -81,7 +73,7 @@ $ remove all
         ["list"] = {
             ---@param _ table
             func = function(_)
-                UI:listScripts()
+                scm.UI:listScripts()
             end,
             description = [[
 $ list
@@ -92,14 +84,14 @@ $ list
             ---@param args table
             func = function(args)
                 if args[3] then
-                    config:updateConfig(args[2], args[3])
+                    scm.config:updateConfig(args[2], args[3])
                 elseif args[2] then
-                    if config.getAll(config)[args[2]] ~= nil then
-                        print(args[2], tostring(config.getAll(config)[args[2]]))
+                    if scm.config.getAll(scm.config)[args[2]] ~= nil then
+                        print(args[2], tostring(scm.config.getAll(scm.config)[args[2]]))
                     end
                 else
                     print("You can currently configure the following variables:")
-                    for cname, cvalue in pairs(config.getAll(config)) do
+                    for cname, cvalue in pairs(scm.config.getAll(scm.config)) do
                         textutils.pagedPrint(cname .. "\t" .. tostring(cvalue))
                     end
                 end
@@ -115,7 +107,7 @@ $ config <name> <value>
         },
         ["refresh"] = {
             func = function(args)
-                Autocomplete:refreshAutocomplete()
+                scm.Autocomplete:refreshAutocomplete()
             end,
             description = [[
 $ refresh
@@ -127,11 +119,11 @@ $ refresh
             ---@param args table
             func = function(args)
                 if args[2] then
-                    if Autocomplete.commands[args[2]] then
-                        textutils.pagedPrint(args[2] .. "\n" .. Autocomplete.commands[args[2]]["description"])
+                    if scm.Autocomplete.commands[args[2]] then
+                        textutils.pagedPrint(args[2] .. "\n" .. scm.Autocomplete.commands[args[2]]["description"])
                     end
                 else
-                    for k, v in pairs(Autocomplete.commands) do
+                    for k, v in pairs(scm.Autocomplete.commands) do
                         textutils.pagedPrint("# " .. k .. "\n" .. v.description)
                     end
                 end
@@ -145,14 +137,6 @@ $ help <name>
         }
     }
 
-    function Autocomplete:init(libs)
-        log = function(...) libs["log"](libs.log, ...) end
-        Net = libs.Net
-        ScriptManager = libs.scriptManager
-        UI = libs.UI
-        config = libs.config
-    end
-
     function Autocomplete:addScriptToAutoComplete(source)
         self.commands["update"]["args"] = self.commands["update"]["args"] or {}
         self.commands["remove"]["args"] = self.commands["remove"]["args"] or {}
@@ -162,10 +146,10 @@ $ help <name>
 
     function Autocomplete:prepareAutocomplete()
         -- prepare update and remove
-        ScriptManager:loadScripts()
+        scm.ScriptManager:loadScripts()
         local installedScripts = {}
-        for i = 1, #ScriptManager.scripts, 1 do
-            installedScripts[ScriptManager.scripts[i].name] = {}
+        for i = 1, #scm.ScriptManager.scripts, 1 do
+            installedScripts[scm.ScriptManager.scripts[i].name] = {}
         end
         installedScripts["all"] = {}
 
@@ -173,12 +157,12 @@ $ help <name>
         self.commands["remove"]["args"] = installedScripts
 
         -- prepare add and require
-        Net:loadRepoScripts()
+        scm.Net:loadRepoScripts()
 
         -- prepare config
         local availableConfigs = {}
 
-        for k, _ in pairs(config.getAll(config)) do
+        for k, _ in pairs(scm.config.getAll()) do
             availableConfigs[k] = {}
         end
 
@@ -201,17 +185,17 @@ $ help <name>
         local programs = {}
         local libraries = {}
 
-        local request = http.get(config.getAll(config)["apiGithubURL"]
-            .. config.getAll(config)["user"]
-            .. config.getAll(config)["apiGithubGetRepos"])
+        local request = http.get(scm.config.getAll(scm.config)["apiGithubURL"]
+            .. scm.config.getAll(scm.config)["user"]
+            .. scm.config.getAll(scm.config)["apiGithubGetRepos"])
         if request then
             local response = request.readAll()
             request.close()
 
             local responseTable = textutils.unserializeJSON(response)
 
-            local programSuffix = config.getAll(config)["programSuffix"]
-            local librarySuffix = config.getAll(config)["librarySuffix"]
+            local programSuffix = scm.config.getAll(scm.config)["programSuffix"]
+            local librarySuffix = scm.config.getAll(scm.config)["librarySuffix"]
 
             for i = 1, #responseTable, 1 do
                 local scriptName = responseTable[i]["name"]
@@ -236,8 +220,8 @@ $ help <name>
         repoScripts["libraries"] = libraries
         repoScripts["programs"] = programs
 
-        local file = fs.open(config.getAll(config)["configDirectory"]
-            .. config.getAll(config)["repoScriptsFile"], "w")
+        local file = fs.open(scm.config.getAll(scm.config)["configDirectory"]
+            .. scm.config.getAll(scm.config)["repoScriptsFile"], "w")
         if file then
             file.write(textutils.serializeJSON(repoScripts))
             file.close()
@@ -294,4 +278,3 @@ $ help <name>
         self.commands["require"]["args"] = t
     end
 end
-return Autocomplete

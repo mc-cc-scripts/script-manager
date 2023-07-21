@@ -1,9 +1,7 @@
 ---@class SCMConfig
 local Config = {}
-
+table.insert(scm, Config)
 do
-    ---@class SCMLog
-    local log = {}
 
 
     ---@class SCMConfigData
@@ -52,11 +50,6 @@ do
         return count
     end
 
-    ---comment
-    ---@param lib SCMLibraries
-    function Config:init(lib)
-        log = lib["log"]
-    end
 
     --- saves the config to the config file
     ---@param config SCMConfigData | nil
@@ -116,9 +109,9 @@ do
                 self:saveConfig(self.config)
             end
         else
-            log:log("You can currently configure the following variables:")
+            scm.log:log("You can currently configure the following variables:")
             for cname, cvalue in pairs(self.config) do
-                log:log(cname, tostring(cvalue))
+                scm.log:log(cname, tostring(cvalue))
             end
         end
     end

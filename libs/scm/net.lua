@@ -1,27 +1,12 @@
 ---@class SCMNet
 local Net = {}
-
+table.insert(scm, Net)
 do
-    ---@type fun(...)
-    local log
-    ---@class SCMScriptManager
-    local ScriptManager
-    ---@type fun():SCMConfigData
-    local config
-    ---@class SCMConfig
-    local configLib
-    ---@class SCMAutoComplete
-    local Autocomplete
-
-    function Net:init(libs)
-        log = function(...) libs["log"](libs.log, ...) end
-        ScriptManager = libs["scriptManager"]
-        config = function()
-            return libs["config"].getAll(libs.config)
-        end
-        configLib = libs["config"]
-        Autocomplete = libs["autocomplete"]
+    local configLib = scm.config
+    local config = function()
+        return scm.config:getAll(scm.config.config)
     end
+    local log= function(...) scm.log:log(...) end
 
     ---@param target string
     ---@param fileType string
@@ -45,10 +30,10 @@ do
         if updateObj then sourceObject.name = updateObj.name end
 
         -- Check for Pastebin
-        local name, code = ScriptManager:splitNameCode(target)
+        local name, code = scm.ScriptManager:splitNameCode(target)
         if name and code then
             sourceObject.name = name
-            return ScriptManager:addScript(self:downloadPastebin(sourceObject, code, config()[fileType .. "Directory"],
+            return scm.ScriptManager:addScript(self:downloadPastebin(sourceObject, code, config()[fileType .. "Directory"],
                 updateObj))
         end
 
@@ -63,7 +48,7 @@ do
         local repository = target .. suffix
         sourceObject.name = target
 
-        return ScriptManager:addScript(self:downloadGit(sourceObject, repository, config()[fileType .. "Directory"],
+        return scm.ScriptManager:addScript(self:downloadGit(sourceObject, repository, config()[fileType .. "Directory"],
             updateObj))
     end
 
@@ -270,8 +255,8 @@ do
         else
             local repoScripts = textutils.unserializeJSON(file.readAll()) or nil
             if repoScripts then
-                Autocomplete:setProgramms(repoScripts["programs"])
-                Autocomplete:setLibaries(repoScripts["libraries"])
+                scm.Autocomplete:setProgramms(repoScripts["programs"])
+                scm.Autocomplete:setLibaries(repoScripts["libraries"])
             end
 
             file.close()
@@ -285,7 +270,7 @@ do
         local programs = {}
         local libraries = {}
 
-        local request = http.get(config()["apiGithubURL"] .. config()["user"] .. self.config["apiGithubGetRepos"])
+        local request = http.get(config()["apiGithubURL"] .. config()["user"] .. config()["apiGithubGetRepos"])
         if request then
             local response = request.readAll()
             request.close()
@@ -312,8 +297,8 @@ do
             log("Download failed")
         end
 
-        Autocomplete:setProgramms(programs)
-        Autocomplete:setLibaries(libraries)
+        scm.Autocomplete:setProgramms(programs)
+        scm.Autocomplete:setLibaries(libraries)
 
         repoScripts["libraries"] = libraries
         repoScripts["programs"] = programs

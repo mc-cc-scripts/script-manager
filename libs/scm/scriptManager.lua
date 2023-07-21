@@ -1,35 +1,12 @@
 --- done
 ---@class SCMScriptManager
 local ScriptManager = { scripts = {} }
-
+table.insert(scm, ScriptManager)
 do
-
-    --#region imports
-
-    ---@class SCMAutoComplete
-    local Autocomplete = {}
-    ---@type fun(...):SCMLog
-    local log
-    ---@type fun():SCMConfigData
-    local config
-    ---@class SCMNet
-    local Net
-    ---@class SCMConfig
-    local configLib
-
-    --#endregion imports
-
-    ---init function of the scriptManager
-    ---@param lib SCMLibraries
-    function ScriptManager:init(lib)
-        log = function(...) lib["log"](lib.log, ...) end
-        Autocomplete = lib["UI"]
-        config = function()
-            return lib["config"].getAll(lib.config)
-        end
-        Net = lib["Net"]
-        configLib = lib["config"]
+    local config = function()
+        return scm.config:getAll(scm.config.config)
     end
+    local log = function(...) scm.log:log(...) end
 
     ---loads the scripts
     function ScriptManager:loadScripts()
@@ -52,7 +29,6 @@ do
     ---adds a script to the script File
     ---@param sourceObject table | nil
     ---@param success boolean
-    ---@param config SCMConfigData
     ---@return boolean
     function ScriptManager:addScript(sourceObject, success)
         if not success or not sourceObject then return false end
@@ -81,9 +57,9 @@ do
 
         self:saveScripts()
 
-        Autocomplete:addScriptToAutoComplete(sourceObject)
-        Autocomplete:prepareAutocomplete()
-        Autocomplete:updateAutocomplete()
+        scm.Autocomplete:addScriptToAutoComplete(sourceObject)
+        scm.Autocomplete:prepareAutocomplete()
+        scm.Autocomplete:updateAutocomplete()
 
         return true
     end
@@ -110,7 +86,7 @@ do
 
         if updateObj.source[sourceName] and updateObj.type then
             self:removeScript(name, true)
-            Net:download(updateObj.source[sourceName], updateObj.type, updateObj)
+            scm.Net:download(updateObj.source[sourceName], updateObj.type, updateObj)
             return true
         end
 
@@ -126,7 +102,7 @@ do
 
     --- removes a script
     ---@param name string
-    ---@param keepScriptConfig boolean
+    ---@param keepScriptConfig boolean | nil
     function ScriptManager:removeScript(name, keepScriptConfig)
         log("Removing script: " .. name)
         local o = {}
@@ -158,8 +134,8 @@ do
         end
 
         -- update autocomplete
-        Autocomplete:prepareAutocomplete()
-        Autocomplete:updateAutocomplete()
+        scm.Autocomplete:prepareAutocomplete()
+        scm.Autocomplete:updateAutocomplete()
     end
     
     --- removes all scripts
@@ -232,9 +208,9 @@ function ScriptManager:checkRequirements(name, localPath)
 
         if not scriptExists then
             if tmpCode then
-                Net:download(tmpName .. "@" .. tmpCode, "library")
+                scm.Net:download(tmpName .. "@" .. tmpCode, "library")
             else
-                Net:download(n, "library")
+                scm.Net:download(n, "library")
             end
         else
             log(n .. " already exists.")
@@ -289,7 +265,7 @@ function ScriptManager:load(name)
     end
 
     if not scriptExists then
-        Net:download(name, "library")
+        scm.Net:download(name, "library")
     end
 
     scriptExists = false

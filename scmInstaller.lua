@@ -14,7 +14,7 @@ local files = {
 
 local function installFiles()
     for _, script in ipairs(files) do
-        http.get('https://raw.githubusercontent.com/mc-cc-scripts/script-manager/master/' .. file, nil, function(_, data)
+        http.get('https://raw.githubusercontent.com/mc-cc-scripts/script-manager/master/' .. script, nil, function(_, data)
             local file = fs.open(script, 'w')
             file.write(data)
             file.close()
