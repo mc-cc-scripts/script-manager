@@ -1,6 +1,6 @@
 ---@class SCMConfig
 local Config = {}
-table.insert(scm, Config)
+SCM.Config = Config
 do
 
 

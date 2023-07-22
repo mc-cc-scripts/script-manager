@@ -1,6 +1,6 @@
 ---@class SCMLog
 local Log = {}
-table.insert(scm, Log)
+SCM.Log = Log
 do
     local config = {}
     function Log:init(lib)

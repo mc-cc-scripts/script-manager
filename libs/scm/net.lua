@@ -1,12 +1,12 @@
 ---@class SCMNet
 local Net = {}
-table.insert(scm, Net)
+SCM.Net = Net
 do
-    local configLib = scm.config
+    local configLib = SCM.Config
     local config = function()
-        return scm.config:getAll(scm.config.config)
+        return SCM.Config:getAll()
     end
-    local log= function(...) scm.log:log(...) end
+    local log= function(...) SCM.Log:log(...) end
 
     ---@param target string
     ---@param fileType string
@@ -30,10 +30,10 @@ do
         if updateObj then sourceObject.name = updateObj.name end
 
         -- Check for Pastebin
-        local name, code = scm.ScriptManager:splitNameCode(target)
+        local name, code = SCM.ScriptManager:splitNameCode(target)
         if name and code then
             sourceObject.name = name
-            return scm.ScriptManager:addScript(self:downloadPastebin(sourceObject, code, config()[fileType .. "Directory"],
+            return SCM.ScriptManager:addScript(self:downloadPastebin(sourceObject, code, config()[fileType .. "Directory"],
                 updateObj))
         end
 
@@ -48,7 +48,7 @@ do
         local repository = target .. suffix
         sourceObject.name = target
 
-        return scm.ScriptManager:addScript(self:downloadGit(sourceObject, repository, config()[fileType .. "Directory"],
+        return SCM.ScriptManager:addScript(self:downloadGit(sourceObject, repository, config()[fileType .. "Directory"],
             updateObj))
     end
 
@@ -227,8 +227,8 @@ do
         if request then
             local content = request.readAll()
             request.close()
-            local scmTags = textutils.unserializeJSON(content)
-            return true, scmTags[1]["name"]
+            local SCMTags = textutils.unserializeJSON(content)
+            return true, SCMTags[1]["name"]
         else
             log("Request to GitHub API failed.")
             return false, "0.0.0"
@@ -236,7 +236,7 @@ do
     end
 
     function Net:updateSCM()
-        log("Updating scm...")
+        log("Updating SCM...")
         shell.run("pastebin", "run", config().installScript)
         local success, version = self:getNewestVersion()
         if success then
@@ -255,8 +255,8 @@ do
         else
             local repoScripts = textutils.unserializeJSON(file.readAll()) or nil
             if repoScripts then
-                scm.Autocomplete:setProgramms(repoScripts["programs"])
-                scm.Autocomplete:setLibaries(repoScripts["libraries"])
+                SCM.Autocomplete:setProgramms(repoScripts["programs"])
+                SCM.Autocomplete:setLibaries(repoScripts["libraries"])
             end
 
             file.close()
@@ -297,8 +297,8 @@ do
             log("Download failed")
         end
 
-        scm.Autocomplete:setProgramms(programs)
-        scm.Autocomplete:setLibaries(libraries)
+        SCM.Autocomplete:setProgramms(programs)
+        SCM.Autocomplete:setLibaries(libraries)
 
         repoScripts["libraries"] = libraries
         repoScripts["programs"] = programs

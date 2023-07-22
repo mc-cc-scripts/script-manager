@@ -1,6 +1,6 @@
 ---@class SCMUI
 local UI = {}
-table.insert(scm, UI)
+SCM.UI = UI
 do
     function UI:listScripts()
     end

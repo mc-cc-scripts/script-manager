@@ -1,12 +1,12 @@
 --- done
 ---@class SCMScriptManager
 local ScriptManager = { scripts = {} }
-table.insert(scm, ScriptManager)
+SCM.ScriptManager = ScriptManager
 do
     local config = function()
-        return scm.config:getAll(scm.config.config)
+        return SCM.Config:getAll()
     end
-    local log = function(...) scm.log:log(...) end
+    local log = function(...) SCM.Log:log(...) end
 
     ---loads the scripts
     function ScriptManager:loadScripts()
@@ -57,15 +57,15 @@ do
 
         self:saveScripts()
 
-        scm.Autocomplete:addScriptToAutoComplete(sourceObject)
-        scm.Autocomplete:prepareAutocomplete()
-        scm.Autocomplete:updateAutocomplete()
+        SCM.Autocomplete:addScriptToAutoComplete(sourceObject)
+        SCM.Autocomplete:prepareAutocomplete()
+        SCM.Autocomplete:updateAutocomplete()
 
         return true
     end
 
     ---@param name string
-    ---@param sourceName string
+    ---@param sourceName string | nil
     ---@return boolean
     function ScriptManager:updateScript(name, sourceName)
         if not sourceName then sourceName = "default" end
@@ -86,7 +86,7 @@ do
 
         if updateObj.source[sourceName] and updateObj.type then
             self:removeScript(name, true)
-            scm.Net:download(updateObj.source[sourceName], updateObj.type, updateObj)
+            SCM.Net:download(updateObj.source[sourceName], updateObj.type, updateObj)
             return true
         end
 
@@ -134,8 +134,8 @@ do
         end
 
         -- update autocomplete
-        scm.Autocomplete:prepareAutocomplete()
-        scm.Autocomplete:updateAutocomplete()
+        SCM.Autocomplete:prepareAutocomplete()
+        SCM.Autocomplete:updateAutocomplete()
     end
     
     --- removes all scripts
@@ -193,9 +193,9 @@ function ScriptManager:checkRequirements(name, localPath)
 
     -- Install missing requirements
     for i = 1, #requires do
-        local n = requires[i]
+        local n = requires[i] --[[@as string]]
         local tmpName, tmpCode = self:splitNameCode(n)
-        if tmpCode then n = tmpName end
+        if tmpCode then n = tmpName--[[@as string]] end
 
         log("Trying to install " .. n .. "...")
 
@@ -208,9 +208,9 @@ function ScriptManager:checkRequirements(name, localPath)
 
         if not scriptExists then
             if tmpCode then
-                scm.Net:download(tmpName .. "@" .. tmpCode, "library")
+                SCM.Net:download(tmpName .. "@" .. tmpCode, "library")
             else
-                scm.Net:download(n, "library")
+                SCM.Net:download(n, "library")
             end
         else
             log(n .. " already exists.")
@@ -265,7 +265,7 @@ function ScriptManager:load(name)
     end
 
     if not scriptExists then
-        scm.Net:download(name, "library")
+        SCM.Net:download(name, "library")
     end
 
     scriptExists = false
