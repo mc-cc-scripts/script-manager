@@ -4,7 +4,7 @@ local Autocomplete = {}
 SCM.Autocomplete = Autocomplete
 
 do
-    local log = function(...) SCM.log:log(...) end
+    local log = function(...) SCM.Log:log(...) end
     Autocomplete.commands = {
         ["require"] = {
             ---@param args table
@@ -162,7 +162,7 @@ $ help <name>
         -- prepare config
         local availableConfigs = {}
 
-        for k, _ in pairs(SCM.Config.getAll()) do
+        for k, _ in pairs(SCM.Config:getAll()) do
             availableConfigs[k] = {}
         end
 

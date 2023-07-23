@@ -1,3 +1,5 @@
+
+
 ---@class SCMConfig
 local Config = {}
 SCM.Config = Config
@@ -55,23 +57,28 @@ do
     ---@param config SCMConfigData | nil
     function Config:saveConfig(config)
         config = config or self.config
-        local file = fs.open(config["configDirectory"] .. config["configFile"], "w")
-        file.write(textutils.serializeJSON(config))
-        file.close()
+        
+        local file = io.open(config["configDirectory"] .. config["configFile"], "w")
+        if not file then
+            os.execute("mkdir " .. config["configDirectory"])
+            file = io.open(config["configDirectory"] .. config["configFile"], "w")
+        end
+        file:write(textutils.serializeJSON(config))
+        file:close()
     end
 
     --- loads the config from the config file
     ---@param config SCMConfigData | nil
     function Config:loadConfig(config)
         config = config or self.config
-        local file = fs.open(config["configDirectory"] .. config["configFile"], "r")
+        local file = io.open(config["configDirectory"] .. config["configFile"], "r")
 
         if not file then
             -- Create config file if it does not exist yet
             self:saveConfig(config)
         else
             -- Load config from file
-            local temp = textutils.unserializeJSON(file.readAll()) or {}
+            local temp = textutils.unserializeJSON(file:read("*all")) or {}
             -- Check if loaded config size is equal to the default size,
             -- otherwise the config is corrupted and will be overwritten
             if tablelength(temp) == tablelength(self.config) then
@@ -79,7 +86,7 @@ do
             else
                 self:saveConfig(config)
             end
-            file.close()
+            file:close()
         end
     end
 

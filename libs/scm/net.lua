@@ -47,7 +47,6 @@ do
         end
         local repository = target .. suffix
         sourceObject.name = target
-
         return SCM.ScriptManager:addScript(self:downloadGit(sourceObject, repository, config()[fileType .. "Directory"],
             updateObj))
     end
@@ -62,8 +61,12 @@ do
         -- Only download if it does not already exist, or if it should be updated
         if fs.exists(targetDirectory .. sourceObject.name) then
             if updateObj then
-                fs.delete(targetDirectory .. sourceObject.name)
-                sourceObject = updateObj
+                if fs then
+                    fs.delete(targetDirectory .. sourceObject.name)
+                else
+                    os.remove(targetDirectory .. sourceObject.name)
+                    sourceObject = updateObj
+                end
             else
                 -- File already exists, you should use update
                 return nil, false
@@ -71,10 +74,14 @@ do
         end
 
         if updateObj then
-            fs.delete(sourceObject.name)
+            if fs then
+                fs.delete(sourceObject.name)
+            else
+                os.remove(sourceObject.name)
+            end
         end
 
-        if sourceObject.type == "program" then
+        if sourceObject.type == "program" and code then
             shell.run("pastebin", "get", code, sourceObject.name .. ".lua")
         else
             shell.run("pastebin", "get", code, targetDirectory .. sourceObject.name .. ".lua")
@@ -94,30 +101,46 @@ do
             config()["user"] .. "/" ..
             repository .. "/" ..
             config()["branch"] .. "/"
-
         local filesUrl = baseUrl .. config()["infoFile"]
 
         local request = http.get(filesUrl)
         if request then
             local content = request.readAll()
+            if content == '404: Not Found' then
+                return nil, false
+            end
             request.close()
-
             if content then
                 local file = fs.open(targetDirectory .. sourceObject.name
                     .. config()[sourceObject.type .. "Suffix"]
                     .. "/" .. config()["infoFile"], "w")
-                file.write(content)
-                file.close()
+                file:write(content)
+                file:close()
 
                 local filePaths = {}
-                file = fs.open(targetDirectory .. sourceObject.name
-                    .. config()[sourceObject.type .. "Suffix"]
-                    .. "/" .. config()["infoFile"], "r")
-                for line in file.readLine do
-                    filePaths[#filePaths + 1] = line
-                end
-                file.close()
+                if fs then 
+                    file = fs.open(targetDirectory .. sourceObject.name
+                        .. config()[sourceObject.type .. "Suffix"]
+                        .. "/" .. config()["infoFile"], "r")
 
+                        local line = file:read()
+                        while line do
+                            filePaths[#filePaths + 1] = line
+                            line = file:read()
+                        end
+                    file:close()
+                else
+                    file = fs.open(targetDirectory .. sourceObject.name
+                        .. config()[sourceObject.type .. "Suffix"]
+                        .. "/" .. config()["infoFile"], "r")
+                        -- print(file:read())
+                        local line = file:read()
+                    while line do
+                        filePaths[#filePaths + 1] = line
+                        line = file:read()
+                    end
+                    file:close()
+                end
                 for i = 1, #filePaths, 1 do
                     local success = true
                     local tmpRequest = http.get(baseUrl .. filePaths[i])
@@ -127,8 +150,15 @@ do
                             local tmpFile = fs.open(targetDirectory .. sourceObject.name
                                 .. config()[sourceObject.type .. "Suffix"]
                                 .. "/" .. filePaths[i], "w")
-                            tmpFile.write(tmpContent)
-                            tmpFile.close()
+                            if not tmpFile then
+                                os.execute("mkdir " .. targetDirectory .. sourceObject.name
+                                    .. config()[sourceObject.type .. "Suffix"])
+                                tmpFile = fs.open(targetDirectory .. sourceObject.name
+                                    .. config()[sourceObject.type .. "Suffix"]
+                                    .. "/" .. filePaths[i], "w")
+                            end
+                            tmpFile:write(tmpContent)
+                            tmpFile:close()
                         else
                             success = false
                         end
@@ -146,22 +176,26 @@ do
                 -- create a link that calls the file within the program directory
                 if sourceObject.type == "program" then
                     local progamLink = fs.open(sourceObject.name, "w")
-                    progamLink.write("shell.execute(\"" .. targetDirectory .. sourceObject.name ..
+                    progamLink:write("shell.execute(\"" .. targetDirectory .. sourceObject.name ..
                         config()[sourceObject.type .. "Suffix"]
                         .. "/" .. sourceObject.name .. ".lua" .. "\", ...)")
-                    progamLink.close()
+                    progamLink:close()
                 elseif sourceObject.type == "library" then
                     local libraryLink = fs.open(targetDirectory .. sourceObject.name .. ".lua", "w")
+                    if not libraryLink then
+                        os.execute("mkdir " .. targetDirectory)
+                        libraryLink = fs.open(targetDirectory .. sourceObject.name .. ".lua", "w")
+                    end
 
                     local tmpName = sourceObject.name
                     if tmpName:find("%.") then
                         tmpName = tmpName:match("(.+)%..+$")
                     end
 
-                    libraryLink.write("return require(\"./" .. config()["libraryDirectory"]
+                    libraryLink:write("return require(\"./" .. config()["libraryDirectory"]
                         .. tmpName .. config()[sourceObject.type .. "Suffix"]
                         .. "/" .. tmpName .. "\")")
-                    libraryLink.close()
+                    libraryLink:close()
                 end
 
                 return sourceObject, true
@@ -194,8 +228,12 @@ do
 
             if content then
                 local file = fs.open(targetDirectory .. sourceObject.name, "w")
-                file.write(content)
-                file.close()
+                if not file then
+                    os.execute("mkdir " .. targetDirectory)
+                    file = fs.open(targetDirectory .. sourceObject.name, "w")
+                end
+                file:write(content)
+                file:close()
                 return sourceObject, true
             end
         end
@@ -253,13 +291,13 @@ do
         if not file then
             self:refreshRepoScripts()
         else
-            local repoScripts = textutils.unserializeJSON(file.readAll()) or nil
+            local repoScripts = textutils.unserializeJSON(file:read("*all")) or nil
             if repoScripts then
                 SCM.Autocomplete:setProgramms(repoScripts["programs"])
                 SCM.Autocomplete:setLibaries(repoScripts["libraries"])
             end
 
-            file.close()
+            file:close()
         end
     end
 
@@ -274,7 +312,6 @@ do
         if request then
             local response = request.readAll()
             request.close()
-
             local responseTable = textutils.unserializeJSON(response)
 
             local programSuffix = config()["programSuffix"]
@@ -304,9 +341,13 @@ do
         repoScripts["programs"] = programs
 
         local file = fs.open(config()["configDirectory"] .. config()["repoScriptsFile"], "w")
+        if not file then
+            os.execute("mkdir " .. config()["configDirectory"])
+            file = fs.open(config()["configDirectory"] .. config()["repoScriptsFile"], "w")
+        end    
         if file then
-            file.write(textutils.serializeJSON(repoScripts))
-            file.close()
+            file:write(textutils.serializeJSON(repoScripts))
+            file:close()
         end
     end
 end

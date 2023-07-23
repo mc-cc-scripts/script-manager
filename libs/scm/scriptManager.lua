@@ -1,6 +1,13 @@
---- done
+--- @class SCMScript
+---@field name string
+---@field type string<"local"|"program"|"library">
+---@field sourceName string
+---@field source table<string, string>
+
 ---@class SCMScriptManager
-local ScriptManager = { scripts = {} }
+local ScriptManager = { 
+    ---@class SCMScript
+    scripts = {} }
 SCM.ScriptManager = ScriptManager
 do
     local config = function()
@@ -14,33 +21,37 @@ do
         if not file then
             self:saveScripts()
         else
-            self.scripts = textutils.unserialiseJSON(file.readAll() or {})
-            file.close()
+            self.scripts = textutils.unserializeJSON(file:read("*all") or "")
+            file:close()
         end
     end
 
     ---loads all scripts
     function ScriptManager:saveScripts()
         local file = fs.open(config()["configDirectory"] .. config()["scriptFile"], "w")
-        file.write(textutils.serializeJSON(self.scripts))
-        file.close()
+        if not file then
+            os.execute("mkdir " .. config["configDirectory"])
+            file = fs.open(config["configDirectory"] .. config["scriptFile"], "w")
+        end
+        file:write(textutils.serializeJSON(self.scripts))
+        file:close()
     end
 
     ---adds a script to the script File
-    ---@param sourceObject table | nil
+    ---@param script table | nil
     ---@param success boolean
     ---@return boolean
-    function ScriptManager:addScript(sourceObject, success)
-        if not success or not sourceObject then return false end
-        log("Adding script" .. sourceObject.name .. "...")
+    function ScriptManager:addScript(script, success)
+        if not success or not script then return false end
+        log("Adding script" .. script.name .. "...")
         local scriptExists = false
 
         -- Check if script already exists, then update
         for i = 1, #self.scripts, 1 do
-            if self.scripts[i].name == sourceObject.name and self.scripts[i].type == sourceObject.type then
+            if self.scripts[i].name == script.name and self.scripts[i].type == script.type then
                 scriptExists = true
-                if self.scripts[i].source[sourceObject.sourceName] then
-                    self.scripts[i].source[sourceObject.sourceName] = sourceObject.source[sourceObject.sourceName]
+                if self.scripts[i].source[script.sourceName] then
+                    self.scripts[i].source[script.sourceName] = script.source[script.sourceName]
                     self:saveScripts()
                     return true
                 end
@@ -48,8 +59,8 @@ do
         end
 
         if not scriptExists then
-            log("Script added: " .. sourceObject.name)
-            table.insert(self.scripts, sourceObject)
+            log("Script added: " .. script.name)
+            table.insert(self.scripts, script)
         else
             log("Script already exists.")
             return false
@@ -57,7 +68,7 @@ do
 
         self:saveScripts()
 
-        SCM.Autocomplete:addScriptToAutoComplete(sourceObject)
+        SCM.Autocomplete:addScriptToAutoComplete(script)
         SCM.Autocomplete:prepareAutocomplete()
         SCM.Autocomplete:updateAutocomplete()
 
@@ -160,7 +171,7 @@ function ScriptManager:checkRequirements(name, localPath)
         if not file then
             file = fs.open('./' .. localPath .. ".lua", "r")
         end
-    elseif fs.exists("./" .. config()["libraryDirectory"] .. name .. config()["librarySuffix"] .. "/" .. name .. ".lua") then
+    elseif fs.open("./" .. config()["libraryDirectory"] .. name .. config()["librarySuffix"] .. "/" .. name .. ".lua", "r") then
         file = fs.open("./" .. config()["libraryDirectory"]
             .. name .. config()["librarySuffix"]
             .. "/" .. name .. ".lua", "r")
@@ -171,7 +182,7 @@ function ScriptManager:checkRequirements(name, localPath)
     -- Find requirements by searching for comment --@requires name
     local requires = {}
     while true do
-        local line = file.readLine()
+        local line = file:read()
         if not line then break end
 
         local find = string.find(line, "--@requires")
@@ -189,7 +200,7 @@ function ScriptManager:checkRequirements(name, localPath)
             requires[#requires + 1] = scriptName
         end
     end
-    file.close()
+    file:close()
 
     -- Install missing requirements
     for i = 1, #requires do
@@ -225,6 +236,7 @@ end
 ---@param name string
 ---@return any | nil
 local function fallbackRequire(name)
+
     log(name .. " not found online, try to find locally")
     --- if script does not exist
     local possiblePath = {
@@ -263,7 +275,6 @@ function ScriptManager:load(name)
             scriptExists = true
         end
     end
-
     if not scriptExists then
         SCM.Net:download(name, "library")
     end
