@@ -80,6 +80,29 @@ do
         file:close()
         return true
     end
+
+    fs.makeDir = function(path)
+        assert("string" == type(path), "path must be a string")
+        path = path .. "/"
+        local exists = os.rename(path, path)
+        if not exists then
+            local dirs = {}
+            for i = 1, #path do
+                if path:sub(i, i) == "/" then
+                    table.insert(dirs, i)
+                end
+            end
+            -- create all directories
+            local dir = ""
+            for i = 1, #dirs do
+                dir = path:sub(1, dirs[i])
+                if not fs.exists(dir) then
+                    os.execute("mkdir " .. dir)
+                end
+            end
+
+        end
+    end
 end
 
 return fs

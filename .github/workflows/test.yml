@@ -17,7 +17,7 @@ jobs:
             - name: get luarocks
               uses: leafo/gh-actions-luarocks@v4
 
-            - name: get busted
+            - name: get busted and luasocket
               run: |
                 luarocks install busted
                 luarocks install luasocket
