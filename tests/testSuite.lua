@@ -1,7 +1,7 @@
 -- implement Test Suite
 
 local json = require("tests/Suite/json")
-local https = require("ssl.https")
+local https = require("socket.http")
 local fs = require("tests/Suite/fs")
 local textutils = {}
 ---@param t table
