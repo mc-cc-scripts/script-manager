@@ -22,4 +22,4 @@ jobs:
 
             - name: run tests
               run: |
-                busted . -o -utfTerminal
+                busted .
