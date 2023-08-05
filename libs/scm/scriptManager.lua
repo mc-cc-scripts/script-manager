@@ -6,7 +6,7 @@
 
 ---@class SCMScriptManager
 local ScriptManager = { 
-    ---@class SCMScript
+    ---@type SCMScript[]
     scripts = {} }
 SCM.ScriptManager = ScriptManager
 do
@@ -23,6 +23,9 @@ do
         else
             self.scripts = textutils.unserializeJSON(file:read("*all") or "")
             file:close()
+            if not self.scripts then
+                self.scripts = {}
+            end
         end
     end
 

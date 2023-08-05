@@ -16,7 +16,7 @@ _G.textutils = textutils
 _G.http = {
     get = function(...)
         local t = https.request(...)
-        if t == "404: Not Found" then
+        if t == "404: Not Found" and printAllowed then
             print("404: Not Found for request: " .. tostring(...))
         end
         return
@@ -32,5 +32,7 @@ _G.shell = {
     ["setCompletionFunction"] = function(...) return end,
     ["run"] = function (...) return end
 }
+
+_G.printAllowed = false
 
 _G.fs = fs

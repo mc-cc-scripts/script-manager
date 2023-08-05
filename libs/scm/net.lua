@@ -350,6 +350,24 @@ do
             file:close()
         end
     end
+
+    function Net:getNewestVersion ()
+        local githubAPIgetTags = config()["apiGithubGetTags"]
+        githubAPIgetTags = githubAPIgetTags:gsub("<USER>", config()["user"])
+        githubAPIgetTags = githubAPIgetTags:gsub("<REPO>", config()["repository"])
+    
+        local request = http.get(githubAPIgetTags)
+    
+        if request then
+            local content = request.readAll()
+            request.close()
+            local scmTags = textutils.unserializeJSON(content)
+            return true, scmTags[1]["name"]
+        else
+            log("Request to GitHub API failed.")
+            return false, "0.0.0"
+        end
+    end
 end
 
 return Net

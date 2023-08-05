@@ -1,0 +1,25 @@
+name: test
+
+on: [push, pull_request]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - name: checkout
+              uses: actions/checkout@v2
+
+            - name: get lua
+              uses: leafo/gh-actions-lua@v5
+              with:
+                luaVersion: "5.1"
+
+            - name: get luarocks
+              uses: leafo/gh-actions-luarocks@v2
+
+            - name: get busted
+              run: luarocks install busted
+
+            - name: run tests
+              run: |
+                busted . -o -utfTerminal

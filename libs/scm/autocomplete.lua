@@ -277,4 +277,18 @@ $ help <name>
     function Autocomplete:setLibaries(t)
         self.commands["require"]["args"] = t
     end
+
+    function Autocomplete:handleArguments (args)
+        if #args == 0 then
+            SCM.UI:cli(false, args)
+            return
+        end
+    
+        if args[1] and self.commands[args[1]] then
+            self.commands[args[1]]["func"](args)
+            if SCM.Config.config["cliPrefix"] then
+                shell.run(read(nil, nil, shell.complete, "scm "))
+            end
+        end
+    end
 end

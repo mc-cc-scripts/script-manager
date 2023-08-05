@@ -85,7 +85,20 @@ local function runTests(func, ...)
     end
 end
 
+
 describe("Testing everything about SCM:", function()
+
+    describe("Copy Files", function()
+        assert.is_true(fs.copy("./scm.lua", "tmpFiles/scm.lua"), "Could not copy scm.lua")
+        assert.is_true(fs.copy("./libs/scm/config.lua", "tmpFiles/config.lua"), "Could not copy config.lua")
+        assert.is_true(fs.copy("./libs/scm/net.lua", "tmpFiles/net.lua"), "Could not copy net.lua")
+        assert.is_true(fs.copy("./libs/scm/log.lua", "tmpFiles/log.lua"), "Could not copy log.lua")
+        assert.is_true(fs.copy("./libs/scm/scriptManager.lua", "tmpFiles/scriptManager.lua"), "Could not copy scriptManager.lua")
+        assert.is_true(fs.copy("./libs/scm/autocomplete.lua", "tmpFiles/autocomplete.lua"), "Could not copy autocomplete.lua")
+        assert.is_true(fs.copy("./libs/scm/ui.lua", "tmpFiles/ui.lua"), "Could not copy ui.lua")
+        assert.is_true(fs.copy("./scmInstaller.lua", "tmpFiles/scmInstaller.lua"), "Could not copy scmInstaller.lua")
+    end)
+
     describe("Require all SCM Modules", function()
         it("should be able to require all modules", function()
             local scm = require("../scm")
@@ -96,9 +109,10 @@ describe("Testing everything about SCM:", function()
             assert.is.truthy(scm.UI)
             assert.is.truthy(scm.ScriptManager)
             assert.is.truthy(scm.Log)
-            print("Require of all modules test passed")
+            -- print("Require of all modules test passed")
         end)
     end)
+
     describe("Config ->", function()
         it("Change SCM Config", function()
             runTests(function(scm)
@@ -115,10 +129,11 @@ describe("Testing everything about SCM:", function()
                 assert.equal("Wrong", config:getAll()["verbose"])
                 config:set("verbose", true)
                 assert.is.truthy(config:getAll()["verbose"] == true)
-                print("Config test passed")
+                -- print("Config test passed")
             end)
         end)
     end)
+
     describe("ScriptManager ->", function()
         it("Load Empty", function()
             runTests(
@@ -130,7 +145,7 @@ describe("Testing everything about SCM:", function()
                     assert.is.truthy(scripts)
                     assert.is.truthy(type(scripts) == "table")
 
-                    print("1. ScriptManager test passed")
+                    -- print("1. ScriptManager test passed (Load Empty)")
                 end
             )
         end)
@@ -138,17 +153,17 @@ describe("Testing everything about SCM:", function()
             runTests(
                 function(scm)
                     local scriptManager = scm.ScriptManager
-                    local file = io.open("testFile.lua", "w")
+                    local file = io.open("localtestFile.lua", "w")
                     if not file then
                         error('file not create')
                     end
                     file:write("local t = {test = true} \n return t")
                     file:close()
-                    local tFile = scm:load("testFile")
+                    local tFile = scm:load("localtestFile")
                     assert.is.truthy(tFile)
                     assert.is.truthy(tFile.test)
-                    os.remove("testFile.lua")
-                    print("2. ScriptManager test passed")
+                    os.remove("localtestFile.lua")
+                    -- print("2. ScriptManager test passed (Load Local)")
                 end
             )
         end)
@@ -159,22 +174,24 @@ describe("Testing everything about SCM:", function()
                     function(scm)
                         local testScript = scm:load("scmTest")
                         local scriptManager = scm.ScriptManager
-                        -- what should be there:
-                        -- local tScript = {
-                        --     name = "testLibrary",
-                        --     type = "remote",
-                        --     source = {
-                        --         ["github"] = "https://raw.githubusercontent.com/mc-cc-scripts/script-manager/master/testLibrary.lua"
-                        --     }
-                        -- }
-                        -- scriptManager:addScript(tScript, true)
                         assert.is.truthy(testScript)
                         assert.is.truthy(testScript.test)
-                        print("3. ScriptManager test passed")
+                        -- print("3. ScriptManager test passed (Load Remote)")
                     end
                 )
             end)
-            
         end)
+    end)
+
+    describe("Restore Files", function()
+        assert.is_true(fs.copy("tmpFiles/scm.lua", "./scm.lua"), "Could not restore scm.lua")
+        assert.is_true(fs.copy("tmpFiles/config.lua", "./libs/scm/config.lua"), "Could not restore config.lua")
+        assert.is_true(fs.copy("tmpFiles/net.lua", "./libs/scm/net.lua"), "Could not restore net.lua")
+        assert.is_true(fs.copy("tmpFiles/log.lua", "./libs/scm/log.lua"), "Could not restore log.lua")
+        assert.is_true(fs.copy("tmpFiles/scriptManager.lua", "./libs/scm/scriptManager.lua"), "Could not restore scriptManager.lua")
+        assert.is_true(fs.copy("tmpFiles/autocomplete.lua", "./libs/scm/autocomplete.lua"), "Could not restore autocomplete.lua")
+        assert.is_true(fs.copy("tmpFiles/ui.lua", "./libs/scm/ui.lua"), "Could not restore ui.lua")
+        assert.is_true(fs.copy("tmpFiles/scmInstaller.lua", "./scmInstaller.lua"), "Could not restore scmInstaller.lua")
+        os.execute("rm --recursive ./tmpFiles")
     end)
 end)
