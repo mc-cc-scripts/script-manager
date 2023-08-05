@@ -33,6 +33,10 @@ _G.shell = {
     ["run"] = function (...) return end
 }
 
+-- Just any day, does not matter as of now
+_G.os.day = function() return 19574 end
+
 _G.printAllowed = false
+
 
 _G.fs = fs
