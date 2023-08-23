@@ -21,7 +21,7 @@ jobs:
               run: |
                 luarocks install busted
                 luarocks install luasocket
-                apt install lua-socket
+                sudo apt install lua-socket
 
             - name: echo stuff
               run: |
