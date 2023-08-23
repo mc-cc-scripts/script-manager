@@ -23,7 +23,7 @@ jobs:
                 luarocks install luasocket
 
             - name: echo stuff
-              run:
+              run: |
                 echo ls -l /usr
                 echo ls -l /usr/share
                 echo ls -l /usr/share/lua
