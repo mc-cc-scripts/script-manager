@@ -27,7 +27,7 @@ jobs:
                 echo ls -l /usr
                 echo ls -l /usr/share
                 echo ls -l /usr/share/lua
-                echo ls -l /usr/share/lua/5.1
+                echo ls -l /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/luarocks
 
             - name: fix https
               run: |
