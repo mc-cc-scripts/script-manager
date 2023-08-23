@@ -22,6 +22,11 @@ jobs:
                 luarocks install busted
                 luarocks install luasocket
 
+            - name: fix https
+              run: |
+                mkdir /usr/share/lua/5.1/ssl/
+                ln -s /usr/share/lua/5.1/https.lua /usr/share/lua/5.1/ssl/https.lua
+                
             - name: run tests
               run: |
                 busted .
