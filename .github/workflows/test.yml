@@ -24,10 +24,10 @@ jobs:
 
             - name: echo stuff
               run: |
-                echo ls -l /usr
-                echo ls -l /usr/share
-                echo ls -l /usr/share/lua
-                echo ls -l /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/luarocks
+                ls -l /usr
+                ls -l /usr/share
+                ls -l /usr/share/lua
+                ls -l /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/luarocks
 
             - name: fix https
               run: |
