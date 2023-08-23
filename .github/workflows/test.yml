@@ -31,9 +31,9 @@ jobs:
 
             - name: fix https
               run: |
-                mkdir -p /usr/share/lua/5.1/ssl/
-                cat /usr/share/lua/5.1/ssl.lua | echo
-                ln -s /usr/share/lua/5.1/https.lua /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/ssl/https.lua
+                mkdir -p /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/ssl/
+                cat /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/https.lua | echo
+                ln -s /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/https.lua /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/ssl/https.lua
 
             - name: run tests
               run: |
