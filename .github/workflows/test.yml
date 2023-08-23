@@ -24,7 +24,7 @@ jobs:
 
             - name: echo stuff
               run: |
-                ls -l /home/runner/work/script-manager/script-manager/.lua
+                ls -l /home/runner/work/script-manager/script-manager/.luarocks/
 
             - name: fix https
               run: |
