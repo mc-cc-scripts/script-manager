@@ -1,0 +1,41 @@
+name: test
+
+on: [push, pull_request]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - name: checkout
+              uses: actions/checkout@v2
+
+            - name: get lua
+              uses: leafo/gh-actions-lua@v10
+              with:
+                luaVersion: "5.1"
+
+            - name: get luarocks
+              uses: leafo/gh-actions-luarocks@v4
+
+            - name: get busted and luasocket
+              run: |
+                luarocks install busted
+                luarocks install luasocket
+                sudo apt install lua-socket
+
+            - name: echo stuff
+              run: |
+                ls -l /home/runner/work/script-manager/script-manager/.luarocks/share
+                ls -l /home/runner/work/script-manager/script-manager/.luarocks/lib
+                ls -l /home/runner/work/script-manager/script-manager/.luarocks/etc
+                ls -l /home/runner/work/script-manager/script-manager/.luarocks/bin
+
+            - name: fix https
+              run: |
+                mkdir -p /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/ssl/
+                cat /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/https.lua | echo
+                ln -s /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/https.lua /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/ssl/https.lua
+
+            - name: run tests
+              run: |
+                busted .
