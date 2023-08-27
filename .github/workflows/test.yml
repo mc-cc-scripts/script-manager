@@ -23,6 +23,18 @@ jobs:
               run: |
                 luarocks install busted
                 luarocks install luasocket
+            
+            - name: debug
+              run: |
+                ls -l /home/runner/work/script-manager/script-manager/.luarocks
+                ls -l /home/runner/work/script-manager/script-manager/.luarocks/share
+                ls -l /home/runner/work/script-manager/script-manager/.luarocks/lib
+                ls -l /home/runner/work/script-manager/script-manager/.luarocks/etc
+                ls -l /home/runner/work/script-manager/script-manager/.luarocks/bin
+                ls -l /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/
+                ls -l /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/socket
+
+                
 
             - name: run tests
               run: |
