@@ -24,10 +24,11 @@ jobs:
       run: |
         luarocks install busted
         luarocks install luasocket
+        luarocks install luasec
 
     - name: debug
       run: |
-        ls -l /usr/share/lua/5.1
+        ls -l /usr/share/lua/
 
     - name: test
       run: |
