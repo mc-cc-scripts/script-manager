@@ -28,7 +28,7 @@ jobs:
 
     - name: debug
       run: |
-        ls -l /usr/share/lua/
+        ls -l /usr/share/
 
     - name: test
       run: |
