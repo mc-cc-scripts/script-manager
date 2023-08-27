@@ -1,10 +1,29 @@
 name: Busted
+
 on: [push, pull_request]
+
 jobs:
-  sile:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        run: |
-            docker pull ghcr.io/lunarmodules/busted:latest
-            docker run -v "$(pwd):/data" ghcr.io/lunarmodules/busted:latest specs
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - name: checkout
+              uses: actions/checkout@v2
+
+            - name: get lua
+              uses: leafo/gh-actions-lua@v10
+              with:
+                luaVersion: "5.1"
+
+            - name: get luarocks
+              uses: leafo/gh-actions-luarocks@v4
+              with:
+                luaVersion: "5.1"
+
+            - name: get busted and luasocket
+              run: |
+                luarocks install busted
+                luarocks install luasocket
+
+            - name: run tests
+              run: |
+                busted .
