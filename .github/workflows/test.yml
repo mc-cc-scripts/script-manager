@@ -7,20 +7,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@master
+    - name: checkout
+      uses: actions/checkout@v2
 
-    - uses: leafo/gh-actions-lua@v10
-      with:
-        luaVersion: "5.1.5"
+    - name: get lua
+      uses: leafo/gh-actions-lua@v10
+      with: 
+        luaVersion: "5.1"
 
-    - uses: leafo/gh-actions-luarocks@v4
-      with:
-        luaVersion: "5.1.5"
+    - name: get luarocks
+      uses: leafo/gh-actions-luarocks@v4
+      with: 
+        luaVersion: "5.1"
 
-    - name: build
+    - name: get busted and luasocket
       run: |
         luarocks install busted
-        luarocks make
+        luarocks install luasocket
+
+    - name: debug
+      run: |
+        ls -l
+        ls -l /.lua/
+        ls -l /usr/share/lua/5.1
 
     - name: test
       run: |
