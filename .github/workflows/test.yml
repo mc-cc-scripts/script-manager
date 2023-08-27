@@ -26,10 +26,6 @@ jobs:
         luarocks install luasocket
         luarocks install luasec
 
-    - name: debug
-      run: |
-        ls -l /usr/share/
-
     - name: test
       run: |
         busted .
