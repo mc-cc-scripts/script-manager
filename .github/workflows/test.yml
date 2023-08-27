@@ -27,8 +27,6 @@ jobs:
 
     - name: debug
       run: |
-        ls -l
-        ls -l /.lua/
         ls -l /usr/share/lua/5.1
 
     - name: test
