@@ -3,39 +3,25 @@ name: Busted
 on: [push, pull_request]
 
 jobs:
-    test:
-        runs-on: ubuntu-latest
-        steps:
-            - name: checkout
-              uses: actions/checkout@v2
+  test:
+    runs-on: ubuntu-latest
 
-            - name: get lua
-              uses: leafo/gh-actions-lua@v10
-              with:
-                luaVersion: "5.1"
+    steps:
+    - uses: actions/checkout@master
 
-            - name: get luarocks
-              uses: leafo/gh-actions-luarocks@v4
-              with:
-                luaVersion: "5.1"
+    - uses: leafo/gh-actions-lua@v10
+      with:
+        luaVersion: "5.1.5"
 
-            - name: get busted and luasocket
-              run: |
-                luarocks install busted
-                luarocks install luasocket
-            
-            - name: debug
-              run: |
-                ls -l /home/runner/work/script-manager/script-manager/.luarocks
-                ls -l /home/runner/work/script-manager/script-manager/.luarocks/share
-                ls -l /home/runner/work/script-manager/script-manager/.luarocks/lib
-                ls -l /home/runner/work/script-manager/script-manager/.luarocks/etc
-                ls -l /home/runner/work/script-manager/script-manager/.luarocks/bin
-                ls -l /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/
-                ls -l /home/runner/work/script-manager/script-manager/.luarocks/share/lua/5.1/socket
+    - uses: leafo/gh-actions-luarocks@v4
+      with:
+        luaVersion: "5.1.5"
 
-                
+    - name: build
+      run: |
+        luarocks install busted
+        luarocks make
 
-            - name: run tests
-              run: |
-                busted .
+    - name: test
+      run: |
+        busted .
