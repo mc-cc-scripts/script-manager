@@ -21,8 +21,8 @@ do
         if not file then
             self:saveScripts()
         else
-            self.scripts = textutils.unserializeJSON(file:read("*all") or "")
-            file:close()
+            self.scripts = textutils.unserializeJSON(file.readAll() or "")
+            file.close()
             if not self.scripts then
                 self.scripts = {}
             end
@@ -36,8 +36,8 @@ do
             os.execute("mkdir " .. config["configDirectory"])
             file = fs.open(config["configDirectory"] .. config["scriptFile"], "w")
         end
-        file:write(textutils.serializeJSON(self.scripts))
-        file:close()
+        file.write(""..textutils.serializeJSON(self.scripts))
+        file.close()
     end
 
     ---adds a script to the script File
@@ -185,7 +185,7 @@ function ScriptManager:checkRequirements(name, localPath)
     -- Find requirements by searching for comment --@requires name
     local requires = {}
     while true do
-        local line = file:read()
+        local line = file.read()
         if not line then break end
 
         local find = string.find(line, "--@requires")
@@ -203,7 +203,7 @@ function ScriptManager:checkRequirements(name, localPath)
             requires[#requires + 1] = scriptName
         end
     end
-    file:close()
+    file.close()
 
     -- Install missing requirements
     for i = 1, #requires do
