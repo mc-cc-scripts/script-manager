@@ -1,4 +1,5 @@
 local fs = {}
+
 fs.libPath = "tmpLibs/"
 fs.progPath = "tmpProg/"
 
@@ -28,7 +29,28 @@ do
         if mode == "w" then
             assert(file, "file could not be opened in : "..path.. " Mode : "..mode)
         end
-        return file
+        if not file then
+            return nil
+        end
+        local file2 = {}
+        setmetatable(file2, {__index = file})
+        file2.base = file
+        file2.readAll = function()
+            return file2.base:read("*a")
+        end
+        file2["readLine"] = function()
+            return file2.base:read("*l")
+        end
+        file2["write"] = function(content)
+            return file2.base:write(content)
+        end
+        file2["read"] = function(...)
+            return file2.base:read(...)
+        end
+        file2["close"] = function()
+            file2.base:close()
+        end
+        return file2
     end
 
     fs.exists = function(path)
@@ -100,9 +122,24 @@ do
                     os.execute("mkdir " .. dir)
                 end
             end
-
         end
     end
-end
 
+    fs.delete = function (path)
+        assert("string" == type(path), "path must be a string")
+        if fs.exists(path) then
+            os.execute("rm -rf " .. path)
+        end
+    end
+    fs.readAll = function (path)
+        assert("string" == type(path), "path must be a string")
+        local file = io.open(path, "r")
+        if not file then
+            return nil
+        end
+        local content = file:read("*a")
+        file:close()
+        return content
+    end
+end
 return fs

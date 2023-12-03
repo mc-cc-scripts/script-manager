@@ -69,6 +69,7 @@ end
 ---@param ... any
 local function runTests(func, ...)
     ---@class SCM
+
     local scm = require("../scm")
     saveConfig(scm)
     saveScripts(scm)
@@ -87,8 +88,9 @@ end
 
 
 describe("Testing everything about SCM:", function()
-
+    --only neccessary for local testing
     describe("Copy Files", function()
+        
         assert.is_true(fs.copy("./scm.lua", "tmpFiles/scm.lua"), "Could not copy scm.lua")
         assert.is_true(fs.copy("./libs/scm/config.lua", "tmpFiles/config.lua"), "Could not copy config.lua")
         assert.is_true(fs.copy("./libs/scm/net.lua", "tmpFiles/net.lua"), "Could not copy net.lua")
@@ -96,7 +98,6 @@ describe("Testing everything about SCM:", function()
         assert.is_true(fs.copy("./libs/scm/scriptManager.lua", "tmpFiles/scriptManager.lua"), "Could not copy scriptManager.lua")
         assert.is_true(fs.copy("./libs/scm/autocomplete.lua", "tmpFiles/autocomplete.lua"), "Could not copy autocomplete.lua")
         assert.is_true(fs.copy("./libs/scm/ui.lua", "tmpFiles/ui.lua"), "Could not copy ui.lua")
-        assert.is_true(fs.copy("./scmInstaller.lua", "tmpFiles/scmInstaller.lua"), "Could not copy scmInstaller.lua")
     end)
 
     describe("Require all SCM Modules", function()
@@ -109,7 +110,6 @@ describe("Testing everything about SCM:", function()
             assert.is.truthy(scm.UI)
             assert.is.truthy(scm.ScriptManager)
             assert.is.truthy(scm.Log)
-            -- print("Require of all modules test passed")
         end)
     end)
 
@@ -129,7 +129,6 @@ describe("Testing everything about SCM:", function()
                 assert.equal("Wrong", config:getAll()["verbose"])
                 config:set("verbose", true)
                 assert.is.truthy(config:getAll()["verbose"] == true)
-                -- print("Config test passed")
             end)
         end)
     end)
@@ -144,8 +143,6 @@ describe("Testing everything about SCM:", function()
                     local scripts = scriptManager.scripts
                     assert.is.truthy(scripts)
                     assert.is.truthy(type(scripts) == "table")
-
-                    -- print("1. ScriptManager test passed (Load Empty)")
                 end
             )
         end)
@@ -163,7 +160,6 @@ describe("Testing everything about SCM:", function()
                     assert.is.truthy(tFile)
                     assert.is.truthy(tFile.test)
                     os.remove("localtestFile.lua")
-                    -- print("2. ScriptManager test passed (Load Local)")
                 end
             )
         end)
@@ -176,13 +172,24 @@ describe("Testing everything about SCM:", function()
                         local scriptManager = scm.ScriptManager
                         assert.is.truthy(testScript)
                         assert.is.truthy(testScript.test)
-                        -- print("3. ScriptManager test passed (Load Remote)")
                     end
                 )
             end)
         end)
+        describe("Update SCM", function()
+            it("Update SCM", function()
+                runTests(
+                    ---@param scm SCM
+                    function(scm)
+                        -- TODO: implement
+                    end
+                )
+            end)
+        end)
+
     end)
 
+    -- only neccessary for local testing
     describe("Restore Files", function()
         assert.is_true(fs.copy("tmpFiles/scm.lua", "./scm.lua"), "Could not restore scm.lua")
         assert.is_true(fs.copy("tmpFiles/config.lua", "./libs/scm/config.lua"), "Could not restore config.lua")
@@ -191,7 +198,6 @@ describe("Testing everything about SCM:", function()
         assert.is_true(fs.copy("tmpFiles/scriptManager.lua", "./libs/scm/scriptManager.lua"), "Could not restore scriptManager.lua")
         assert.is_true(fs.copy("tmpFiles/autocomplete.lua", "./libs/scm/autocomplete.lua"), "Could not restore autocomplete.lua")
         assert.is_true(fs.copy("tmpFiles/ui.lua", "./libs/scm/ui.lua"), "Could not restore ui.lua")
-        assert.is_true(fs.copy("tmpFiles/scmInstaller.lua", "./scmInstaller.lua"), "Could not restore scmInstaller.lua")
         os.execute("rm --recursive ./tmpFiles")
     end)
 end)
