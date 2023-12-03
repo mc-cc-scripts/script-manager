@@ -157,8 +157,8 @@ do
                                     .. config()[sourceObject.type .. "Suffix"]
                                     .. "/" .. filePaths[i], "w")
                             end
-                            tmpfile.write(tmpContent)
-                            tmpfile.close()
+                            tmpFile.write(tmpContent)
+                            tmpFile.close()
                         else
                             success = false
                         end
@@ -176,10 +176,10 @@ do
                 -- create a link that calls the file within the program directory
                 if sourceObject.type == "program" then
                     local progamLink = fs.open(sourceObject.name, "w")
-                    progamLink:write("shell.execute(\"" .. targetDirectory .. sourceObject.name ..
+                    progamLink.write("shell.execute(\"" .. targetDirectory .. sourceObject.name ..
                         config()[sourceObject.type .. "Suffix"]
                         .. "/" .. sourceObject.name .. ".lua" .. "\", ...)")
-                    progamLink:close()
+                    progamLink.close()
                 elseif sourceObject.type == "library" then
                     local libraryLink = fs.open(targetDirectory .. sourceObject.name .. ".lua", "w")
                     if not libraryLink then
@@ -192,10 +192,10 @@ do
                         tmpName = tmpName:match("(.+)%..+$")
                     end
 
-                    libraryLink:write("return require(\"./" .. config()["libraryDirectory"]
+                    libraryLink.write("return require(\"./" .. config()["libraryDirectory"]
                         .. tmpName .. config()[sourceObject.type .. "Suffix"]
                         .. "/" .. tmpName .. "\")")
-                    libraryLink:close()
+                    libraryLink.close()
                 end
 
                 return sourceObject, true

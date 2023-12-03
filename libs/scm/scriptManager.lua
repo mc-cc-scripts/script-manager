@@ -136,10 +136,14 @@ do
         end
 
         -- delete file
-        if scriptType and fs.exists(config()[scriptType .. "Directory"] .. name .. ".lua") then
-            fs.delete(config()[scriptType .. "Directory"] .. name .. config()[scriptType .. "Suffix"])
+        local scriptDir = config()[scriptType .. "Directory"]
+        if scriptType and (
+            fs.exists(scriptDir .. name .. ".lua") or 
+            fs.exists(scriptDir .. name .. config()[scriptType .. "Suffix"])
+        ) then
+            fs.delete(scriptDir .. name .. config()[scriptType .. "Suffix"])
             if scriptType == "library" then
-                fs.delete(config()[scriptType .. "Directory"] .. name .. ".lua")
+                fs.delete(scriptDir .. name .. ".lua")
             end
         end
 

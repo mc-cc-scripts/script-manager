@@ -1,11 +1,11 @@
 ---@class SCM
 SCM = {}
-require('libs.scm.config')
-require('libs.scm.net')
-require('libs.scm.log')
-require('libs.scm.scriptManager')
-require('libs.scm.autocomplete')
-require('libs.scm.ui')
+require('./libs.scm.config')
+require('./libs.scm.net')
+require('./libs.scm.log')
+require('./libs.scm.scriptManager')
+require('./libs.scm.autocomplete')
+require('./libs.scm.ui')
 
 function SCM:checkVersion()
     if not self.Config.config["updateAvailable"] and self.Config.config["lastVersionCheck"] ~= '' .. os.day("utc") then
