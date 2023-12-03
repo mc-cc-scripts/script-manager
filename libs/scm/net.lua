@@ -114,8 +114,8 @@ do
                 local file = fs.open(targetDirectory .. sourceObject.name
                     .. config()[sourceObject.type .. "Suffix"]
                     .. "/" .. config()["infoFile"], "w")
-                file:write(content)
-                file:close()
+                file.write(content)
+                file.close()
 
                 local filePaths = {}
                 if fs then 
@@ -123,23 +123,23 @@ do
                         .. config()[sourceObject.type .. "Suffix"]
                         .. "/" .. config()["infoFile"], "r")
 
-                        local line = file:read()
+                        local line = file.read()
                         while line do
                             filePaths[#filePaths + 1] = line
-                            line = file:read()
+                            line = file.read()
                         end
-                    file:close()
+                    file.close()
                 else
                     file = fs.open(targetDirectory .. sourceObject.name
                         .. config()[sourceObject.type .. "Suffix"]
                         .. "/" .. config()["infoFile"], "r")
-                        -- print(file:read())
-                        local line = file:read()
+                        -- print(file.read())
+                        local line = file.read()
                     while line do
                         filePaths[#filePaths + 1] = line
-                        line = file:read()
+                        line = file.read()
                     end
-                    file:close()
+                    file.close()
                 end
                 for i = 1, #filePaths, 1 do
                     local success = true
@@ -157,8 +157,8 @@ do
                                     .. config()[sourceObject.type .. "Suffix"]
                                     .. "/" .. filePaths[i], "w")
                             end
-                            tmpFile:write(tmpContent)
-                            tmpFile:close()
+                            tmpfile.write(tmpContent)
+                            tmpfile.close()
                         else
                             success = false
                         end
@@ -232,8 +232,8 @@ do
                     os.execute("mkdir " .. targetDirectory)
                     file = fs.open(targetDirectory .. sourceObject.name, "w")
                 end
-                file:write(content)
-                file:close()
+                file.write(content)
+                file.close()
                 return sourceObject, true
             end
         end
@@ -291,13 +291,13 @@ do
         if not file then
             self:refreshRepoScripts()
         else
-            local repoScripts = textutils.unserializeJSON(file:read("*all")) or nil
+            local repoScripts = textutils.unserializeJSON(file.readAll()) or nil
             if repoScripts then
                 SCM.Autocomplete:setProgramms(repoScripts["programs"])
                 SCM.Autocomplete:setLibaries(repoScripts["libraries"])
             end
 
-            file:close()
+            file.close()
         end
     end
 
@@ -346,8 +346,8 @@ do
             file = fs.open(config()["configDirectory"] .. config()["repoScriptsFile"], "w")
         end    
         if file then
-            file:write(textutils.serializeJSON(repoScripts))
-            file:close()
+            file.write(""..textutils.serializeJSON(repoScripts))
+            file.close()
         end
     end
 
