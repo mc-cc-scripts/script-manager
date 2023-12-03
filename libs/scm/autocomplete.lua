@@ -258,7 +258,7 @@ $ help <name>
     end
 
     function Autocomplete:updateAutocomplete()
-        shell.setCompletionFunction("SCM", completionFunction)
+        shell.setCompletionFunction("scm.lua", completionFunction)
     end
 
     function Autocomplete:refreshAutocomplete()
