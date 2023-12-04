@@ -316,7 +316,6 @@ do
                     ] = {}
                 end
             end
-            log("Done")
         else
             log("Download failed")
         end

@@ -293,7 +293,6 @@ do
             self:checkRequirements(name)
             local path = "./" .. config()["libraryDirectory"] .. name
             local script = require(path)
-            log("Done")
             return script
         end
 
