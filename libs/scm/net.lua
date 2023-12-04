@@ -6,7 +6,7 @@ do
     local config = function()
         return SCM.Config:getAll()
     end
-    local log= function(...) SCM.Log:log(...) end
+    local log = function(...) SCM.Log:log(...) end
 
     ---@param target string
     ---@param fileType string
@@ -18,22 +18,22 @@ do
             --@TODO: Error handling
             return false
         end
-
         local sourceObject = {
             name = nil,
             source = {
-                ["default"] = target
+                ["default"] = target,
             },
+            sourceName = "default",
             type = fileType
         }
-
         if updateObj then sourceObject.name = updateObj.name end
 
         -- Check for Pastebin
         local name, code = SCM.ScriptManager:splitNameCode(target)
         if name and code then
             sourceObject.name = name
-            return SCM.ScriptManager:addScript(self:downloadPastebin(sourceObject, code, config()[fileType .. "Directory"],
+            return SCM.ScriptManager:addScript(self:downloadPastebin(sourceObject, code,
+                config()[fileType .. "Directory"],
                 updateObj))
         end
 
@@ -47,6 +47,7 @@ do
         end
         local repository = target .. suffix
         sourceObject.name = target
+
         return SCM.ScriptManager:addScript(self:downloadGit(sourceObject, repository, config()[fileType .. "Directory"],
             updateObj))
     end
@@ -118,29 +119,15 @@ do
                 file.close()
 
                 local filePaths = {}
-                if fs then 
-                    file = fs.open(targetDirectory .. sourceObject.name
-                        .. config()[sourceObject.type .. "Suffix"]
-                        .. "/" .. config()["infoFile"], "r")
-
-                        local line = file.read()
-                        while line do
-                            filePaths[#filePaths + 1] = line
-                            line = file.read()
-                        end
-                    file.close()
-                else
-                    file = fs.open(targetDirectory .. sourceObject.name
-                        .. config()[sourceObject.type .. "Suffix"]
-                        .. "/" .. config()["infoFile"], "r")
-                        -- print(file.read())
-                        local line = file.read()
-                    while line do
-                        filePaths[#filePaths + 1] = line
-                        line = file.read()
-                    end
-                    file.close()
+                file = fs.open(targetDirectory .. sourceObject.name
+                    .. config()[sourceObject.type .. "Suffix"]
+                    .. "/" .. config()["infoFile"], "r")
+                local line = file.readLine()
+                while line do
+                    filePaths[#filePaths + 1] = line
+                    line = file.readLine()
                 end
+                file.close()
                 for i = 1, #filePaths, 1 do
                     local success = true
                     local tmpRequest = http.get(baseUrl .. filePaths[i])
@@ -175,7 +162,7 @@ do
 
                 -- create a link that calls the file within the program directory
                 if sourceObject.type == "program" then
-                    local progamLink = fs.open(sourceObject.name, "w")
+                    local progamLink = fs.open(sourceObject.name .. ".lua", "w")
                     progamLink.write("shell.execute(\"" .. targetDirectory .. sourceObject.name ..
                         config()[sourceObject.type .. "Suffix"]
                         .. "/" .. sourceObject.name .. ".lua" .. "\", ...)")
@@ -219,7 +206,6 @@ do
         if not sourceObject.name then
             sourceObject.name = self:getNameFromURL(sourceObject.source[sourceName])
         end
-
         local request = http.get(sourceObject.source[sourceName])
 
         if request then
@@ -234,6 +220,7 @@ do
                 end
                 file.write(content)
                 file.close()
+
                 return sourceObject, true
             end
         end
@@ -344,20 +331,20 @@ do
         if not file then
             os.execute("mkdir " .. config()["configDirectory"])
             file = fs.open(config()["configDirectory"] .. config()["repoScriptsFile"], "w")
-        end    
+        end
         if file then
-            file.write(""..textutils.serializeJSON(repoScripts))
+            file.write("" .. textutils.serializeJSON(repoScripts))
             file.close()
         end
     end
 
-    function Net:getNewestVersion ()
+    function Net:getNewestVersion()
         local githubAPIgetTags = config()["apiGithubGetTags"]
         githubAPIgetTags = githubAPIgetTags:gsub("<USER>", config()["user"])
         githubAPIgetTags = githubAPIgetTags:gsub("<REPO>", config()["repository"])
-    
+
         local request = http.get(githubAPIgetTags)
-    
+
         if request then
             local content = request.readAll()
             request.close()
