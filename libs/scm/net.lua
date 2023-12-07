@@ -192,42 +192,6 @@ do
         return nil, false
     end
 
-    ---@param sourceObject table
-    ---@param targetDirectory string
-    ---@param updateObj table | nil
-    ---@return table | nil
-    ---@return boolean
-    function Net:downloadURL(sourceObject, targetDirectory, updateObj)
-        local sourceName = "default" or (updateObj and updateObj.sourceName)
-        if updateObj then
-            sourceObject.name = sourceObject.name or updateObj.name
-        end
-
-        if not sourceObject.name then
-            sourceObject.name = self:getNameFromURL(sourceObject.source[sourceName])
-        end
-        local request = http.get(sourceObject.source[sourceName])
-
-        if request then
-            local content = request.readAll()
-            request.close()
-
-            if content then
-                local file = fs.open(targetDirectory .. sourceObject.name, "w")
-                if not file then
-                    os.execute("mkdir " .. targetDirectory)
-                    file = fs.open(targetDirectory .. sourceObject.name, "w")
-                end
-                file.write(content)
-                file.close()
-
-                return sourceObject, true
-            end
-        end
-
-        return nil, false
-    end
-
     ---@param url string
     ---@return string
     function Net:getNameFromURL(url)
