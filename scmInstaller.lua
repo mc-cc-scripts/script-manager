@@ -27,7 +27,6 @@ function SCMInstaller:deleteFiles(files)
     end
 end
 
--- download the files
 function SCMInstaller:downloadFiles(source, files)
     for index, value in ipairs(files) do
         print('Downloading ' .. index .. ' of ' .. #files .. ' files: ' .. value)

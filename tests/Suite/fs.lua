@@ -6,7 +6,7 @@ fs.progPath = "tmpProg/"
 do
     fs.open = function(path, mode)
         assert("string" == type(path), tostring(path) .. "path must be a string")
-        assert("string" == type(mode), tostring(mode) .." mode must be a string")
+        assert("string" == type(mode), tostring(mode) .. " mode must be a string")
         local file = io.open(path, mode)
         if not file then
             -- find all occurences of / in the path
@@ -27,13 +27,13 @@ do
             file = io.open(path, mode)
         end
         if mode == "w" then
-            assert(file, "file could not be opened in : "..path.. " Mode : "..mode)
+            assert(file, "file could not be opened in : " .. path .. " Mode : " .. mode)
         end
         if not file then
             return nil
         end
         local file2 = {}
-        setmetatable(file2, {__index = file})
+        setmetatable(file2, { __index = file })
         file2.base = file
         file2.readAll = function()
             return file2.base:read("*a")
@@ -68,7 +68,7 @@ do
         assert("string" == type(dest), "dest must be a string")
         local file = io.open(src, "r")
         if not file then
-            print("file "..src.." not found")
+            print("file " .. src .. " not found")
             return false
         end
         local content = file:read("*a")
@@ -93,7 +93,7 @@ do
                 end
                 file = io.open(dest, "w")
                 if not file then
-                    print("file"..dest.." not found")
+                    print("file" .. dest .. " not found")
                     return false
                 end
             end
@@ -125,13 +125,13 @@ do
         end
     end
 
-    fs.delete = function (path)
+    fs.delete = function(path)
         assert("string" == type(path), "path must be a string")
         if fs.exists(path) then
             os.execute("rm -rf " .. path)
         end
     end
-    fs.readAll = function (path)
+    fs.readAll = function(path)
         assert("string" == type(path), "path must be a string")
         local file = io.open(path, "r")
         if not file then

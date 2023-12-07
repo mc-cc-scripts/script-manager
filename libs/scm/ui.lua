@@ -2,17 +2,6 @@
 local UI = {}
 SCM.UI = UI
 do
-    --Redundant
-    function UI:printUsage()
-        print("Usage: scm <command> [args]")
-        print("Commands:")
-        print("  add <name> [src]")
-        print("  update [name] [src]")
-        print("  remove <name>")
-        print("  list")
-        print("  config <name> [value]")
-    end
-
     function UI:listScripts()
         local scripts = SCM.ScriptManager.scripts
         print("name", "type")

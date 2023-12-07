@@ -1,11 +1,7 @@
-
-
 ---@class SCMConfig
 local Config = {}
 SCM.Config = Config
 do
-
-
     ---@class SCMConfigData
     Config.config = {
         -- Git Settings (In this case on GitHub, not tested with others)
@@ -57,7 +53,7 @@ do
     ---@param config SCMConfigData | nil
     function Config:saveConfig(config)
         config = config or self.config
-        
+
         local file = fs.open(config["configDirectory"] .. config["configFile"], "w")
         if not file then
             os.execute("mkdir " .. config["configDirectory"])

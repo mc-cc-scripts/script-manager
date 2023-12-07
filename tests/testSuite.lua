@@ -30,7 +30,7 @@ _G.http = {
 _G.shell = {
     -- TODO: implement shell - CompleteFunction
     ["setCompletionFunction"] = function(...) return end,
-    ["run"] = function (...) return end
+    ["run"] = function(...) return end
 }
 
 -- Just any day, does not matter as of now

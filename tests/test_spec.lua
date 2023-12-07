@@ -90,13 +90,14 @@ end
 describe("Testing everything about SCM:", function()
     --only neccessary for local testing
     describe("Copy Files", function()
-        
         assert.is_true(fs.copy("./scm.lua", "tmpFiles/scm.lua"), "Could not copy scm.lua")
         assert.is_true(fs.copy("./libs/scm/config.lua", "tmpFiles/config.lua"), "Could not copy config.lua")
         assert.is_true(fs.copy("./libs/scm/net.lua", "tmpFiles/net.lua"), "Could not copy net.lua")
         assert.is_true(fs.copy("./libs/scm/log.lua", "tmpFiles/log.lua"), "Could not copy log.lua")
-        assert.is_true(fs.copy("./libs/scm/scriptManager.lua", "tmpFiles/scriptManager.lua"), "Could not copy scriptManager.lua")
-        assert.is_true(fs.copy("./libs/scm/autocomplete.lua", "tmpFiles/autocomplete.lua"), "Could not copy autocomplete.lua")
+        assert.is_true(fs.copy("./libs/scm/scriptManager.lua", "tmpFiles/scriptManager.lua"),
+            "Could not copy scriptManager.lua")
+        assert.is_true(fs.copy("./libs/scm/autocomplete.lua", "tmpFiles/autocomplete.lua"),
+            "Could not copy autocomplete.lua")
         assert.is_true(fs.copy("./libs/scm/ui.lua", "tmpFiles/ui.lua"), "Could not copy ui.lua")
     end)
 
@@ -163,10 +164,10 @@ describe("Testing everything about SCM:", function()
                 end
             )
         end)
-        describe("Load Remote", function ()
+        describe("Load Remote", function()
             it("Get TestLib", function()
                 runTests(
-                    ---@param scm SCM
+                ---@param scm SCM
                     function(scm)
                         local testScript = scm:load("scmTest")
                         local scriptManager = scm.ScriptManager
@@ -179,14 +180,13 @@ describe("Testing everything about SCM:", function()
         describe("Update SCM", function()
             it("Update SCM", function()
                 runTests(
-                    ---@param scm SCM
+                ---@param scm SCM
                     function(scm)
                         -- TODO: implement
                     end
                 )
             end)
         end)
-
     end)
 
     -- only neccessary for local testing
@@ -195,8 +195,10 @@ describe("Testing everything about SCM:", function()
         assert.is_true(fs.copy("tmpFiles/config.lua", "./libs/scm/config.lua"), "Could not restore config.lua")
         assert.is_true(fs.copy("tmpFiles/net.lua", "./libs/scm/net.lua"), "Could not restore net.lua")
         assert.is_true(fs.copy("tmpFiles/log.lua", "./libs/scm/log.lua"), "Could not restore log.lua")
-        assert.is_true(fs.copy("tmpFiles/scriptManager.lua", "./libs/scm/scriptManager.lua"), "Could not restore scriptManager.lua")
-        assert.is_true(fs.copy("tmpFiles/autocomplete.lua", "./libs/scm/autocomplete.lua"), "Could not restore autocomplete.lua")
+        assert.is_true(fs.copy("tmpFiles/scriptManager.lua", "./libs/scm/scriptManager.lua"),
+            "Could not restore scriptManager.lua")
+        assert.is_true(fs.copy("tmpFiles/autocomplete.lua", "./libs/scm/autocomplete.lua"),
+            "Could not restore autocomplete.lua")
         assert.is_true(fs.copy("tmpFiles/ui.lua", "./libs/scm/ui.lua"), "Could not restore ui.lua")
         os.execute("rm --recursive ./tmpFiles")
     end)
