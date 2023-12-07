@@ -244,7 +244,7 @@ do
         else
             local repoScripts = textutils.unserializeJSON(file.readAll()) or nil
             if repoScripts then
-                SCM.Autocomplete:setProgramms(repoScripts["programs"])
+                SCM.Autocomplete:setPrograms(repoScripts["programs"])
                 SCM.Autocomplete:setLibaries(repoScripts["libraries"])
             end
 
@@ -284,7 +284,7 @@ do
             log("Download failed")
         end
 
-        SCM.Autocomplete:setProgramms(programs)
+        SCM.Autocomplete:setPrograms(programs)
         SCM.Autocomplete:setLibaries(libraries)
 
         repoScripts["libraries"] = libraries

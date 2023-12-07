@@ -177,55 +177,6 @@ $ help <name>
         self.commands["help"]["args"] = availableCommands
     end
 
-    function Autocomplete:refreshRepoScripts()
-        log("Downloading program and library names from GitHub...")
-        local repoScripts = {}
-
-        local programs = {}
-        local libraries = {}
-
-        local request = http.get(SCM.Config.getAll(SCM.Config)["apiGithubURL"]
-            .. SCM.Config.getAll(SCM.Config)["user"]
-            .. SCM.Config.getAll(SCM.Config)["apiGithubGetRepos"])
-        if request then
-            local response = request.readAll()
-            request.close()
-
-            local responseTable = textutils.unserializeJSON(response)
-
-            local programSuffix = SCM.Config.getAll(SCM.Config)["programSuffix"]
-            local librarySuffix = SCM.Config.getAll(SCM.Config)["librarySuffix"]
-
-            for i = 1, #responseTable, 1 do
-                local scriptName = responseTable[i]["name"]
-                if string.sub(scriptName, -string.len(programSuffix)) == programSuffix then
-                    programs[
-                    string.sub(scriptName, 0, string.len(scriptName) - string.len(programSuffix))
-                    ] = {}
-                elseif string.sub(scriptName, -string.len(librarySuffix)) == librarySuffix then
-                    libraries[
-                    string.sub(scriptName, 0, string.len(scriptName) - string.len(librarySuffix))
-                    ] = {}
-                end
-            end
-        else
-            log("Download failed")
-        end
-
-        self.commands["add"]["args"] = programs
-        self.commands["require"]["args"] = libraries
-
-        repoScripts["libraries"] = libraries
-        repoScripts["programs"] = programs
-
-        local file = fs.open(SCM.Config.getAll(SCM.Config)["configDirectory"]
-            .. SCM.Config.getAll(SCM.Config)["repoScriptsFile"], "w")
-        if file then
-            file.write(textutils.serializeJSON(repoScripts))
-            file.close()
-        end
-    end
-
     ---@param shell table
     ---@param index integer
     ---@param argument string
@@ -260,13 +211,13 @@ $ help <name>
     end
 
     function Autocomplete:refreshAutocomplete()
-        self:refreshRepoScripts()
+        SCM.Net:refreshRepoScripts()
         self:prepareAutocomplete()
         self:updateAutocomplete()
     end
 
     ---@param t table
-    function Autocomplete:setProgramms(t)
+    function Autocomplete:setPrograms(t)
         self.commands["add"]["args"] = t
     end
 
