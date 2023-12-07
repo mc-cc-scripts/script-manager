@@ -16,7 +16,6 @@ do
     end
     local log = function(...) SCM.Log:log(...) end
 
-    ---loads the scripts
     function ScriptManager:loadScripts()
         local file = fs.open(config()["configDirectory"] .. config()["scriptFile"], "r")
         if not file then
@@ -30,7 +29,6 @@ do
         end
     end
 
-    ---loads all scripts
     function ScriptManager:saveScripts()
         local file = fs.open(config()["configDirectory"] .. config()["scriptFile"], "w")
         if not file then
@@ -41,7 +39,6 @@ do
         file.close()
     end
 
-    ---adds a script to the script File
     ---@param script table | nil
     ---@param success boolean
     ---@return boolean
@@ -107,14 +104,12 @@ do
         return false
     end
 
-    --- updates all scripts
     function ScriptManager:updateAllScripts()
         for i = 1, #self.scripts, 1 do
             self:updateScript(self.scripts[i].name, "default")
         end
     end
 
-    --- removes a script
     ---@param name string
     ---@param keepScriptConfig boolean | nil
     function ScriptManager:removeScript(name, keepScriptConfig)
@@ -133,6 +128,7 @@ do
             self.scripts = o
             self:saveScripts()
         end
+
         -- delete file
         local scriptDir = config()[scriptType .. "Directory"]
         if scriptType and (
@@ -153,7 +149,6 @@ do
         SCM.Autocomplete:updateAutocomplete()
     end
 
-    --- removes all scripts
     function ScriptManager:removeAllScripts()
         local tmpScripts = {}
         for i = 1, #self.scripts, 1 do
@@ -183,6 +178,7 @@ do
             file = fs.open("./" .. config()["libraryDirectory"] .. name .. ".lua", "r")
         end
         if not file then log('File ' .. name .. ' not found') end
+
         -- Find requirements by searching for comment --@requires name
         local requires = {}
         while true do
