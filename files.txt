@@ -1,0 +1,7 @@
+scm.lua
+/libs/scm/autocomplete.lua
+/libs/scm/config.lua
+/libs/scm/log.lua
+/libs/scm/net.lua
+/libs/scm/scriptManager.lua
+/libs/scm/ui.lua
