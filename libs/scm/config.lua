@@ -25,7 +25,7 @@ do
         ["configDirectory"] = "config/",
         ["configFile"] = "scm-config.json",
         ["scriptFile"] = "scm-scripts.json", -- will be saved in configDirectory as well
-        ["verbose"] = true,
+        ["verbose"] = false,
         ["printPrefix"] = "[scm] ",
         ["logDate"] = false,
         ["writeLogFile"] = false,
