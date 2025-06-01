@@ -31,7 +31,7 @@ scm add testProgram@7ByR3NYn
 ```
 
 ## Build scripts
-### Program
+## SCM Program
 To add libraries to your programs, you will have to require **SCM** first.
 ```lua
 local scm = require("./scm")
@@ -42,12 +42,12 @@ scm:load("testLibrary")
 ```
 If a library is missing, **SCM** will try to install it.
 
-### Libraries
-Furthermore, **SCM** can also check nested sub-libraries within the loaded library. To do that, you will have to add a comment before requiring the library. This has the advantage of the libraries still being usable without **SCM**, as a comment does not interfer with the logic of the script.
+Alternatively you can add a comment before requiring the library. This has the advantage of the libraries still being usable without **SCM**, as a comment does not interfere with the logic of the script.
 ```lua
 --@requires subLibrary
 require("./libs/subLibrary")
 ```
+
 ### Pastebin
 You can also use libraries hosted on Pastebin. Just attach the Pastebin code at the end of the name, separated by an `@`.
 ```lua
